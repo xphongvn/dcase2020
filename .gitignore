@@ -1,6 +1,10 @@
 # Created by .ignore support plugin (hsz.mobi)
 ### Example user template template
 ### Example user template
+# Results
+/model
+/result
+baseline.log
 
 # IntelliJ project files
 .idea
