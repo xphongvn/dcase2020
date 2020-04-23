@@ -23,6 +23,9 @@ from tqdm import tqdm
 # original lib
 import common as com
 import keras_model
+#Pytorch
+#import torch_model
+
 ########################################################################
 
 
@@ -38,6 +41,8 @@ param = com.yaml_load()
 ########################################################################
 class visualizer(object):
     def __init__(self):
+        import matplotlib
+        matplotlib.use('PS') #to fix Mac OS
         import matplotlib.pyplot as plt
         self.plt = plt
         self.fig = self.plt.figure(figsize=(30, 10))
@@ -195,9 +200,18 @@ if __name__ == "__main__":
         # train model
         print("============== MODEL TRAINING ==============")
         model = keras_model.get_model(param["feature"]["n_mels"] * param["feature"]["frames"])
+        #Pytorch
+        #model = torch_model.get_model(param["feature"]["n_mels"] * param["feature"]["frames"])
+
         model.summary()
+        #Pytorch
+        #print(model)
 
         model.compile(**param["fit"]["compile"])
+        #Pytorch
+        #criterion = nn.MSELoss()
+        #optimizer = torch.optim.Adam(model.parameters())
+
         history = model.fit(train_data,
                             train_data,
                             epochs=param["fit"]["epochs"],
@@ -206,8 +220,32 @@ if __name__ == "__main__":
                             validation_split=param["fit"]["validation_split"],
                             verbose=param["fit"]["verbose"])
         
+        #PyTorch
+        """
+        trainloader = torch.utils.data.DataLoader(train_data, 
+                                                batch_size=param["fit"]["batch_size"],
+                                                shuffle=param["fit"]["shuffle"],
+                                                num_workers=2)
+        
+        for i in range(param["fit"]["epochs"]):
+            #forward
+            output = model(train_data)
+            loss = criterion(output, train_data)
+            #backward
+            optimizer.zero_grad()
+            loss.backward()
+            optimizer.step()
+            # ===================log========================
+            print('epoch [{}/{}], loss:{:.4f}'
+                .format(epoch + 1, num_epochs, loss.data[0]))
+        """
+
         visualizer.loss_plot(history.history["loss"], history.history["val_loss"])
         visualizer.save_figure(history_img)
         model.save(model_file_path)
+
+
+
+
         com.logger.info("save_model -> {}".format(model_file_path))
         print("============== END TRAINING ==============")

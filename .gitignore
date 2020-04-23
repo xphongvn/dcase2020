@@ -4,6 +4,8 @@
 # Results
 /model
 /result
+/dev_data
+/eval_data
 baseline.log
 
 # IntelliJ project files
