@@ -313,10 +313,10 @@ if __name__ == "__main__":
 
         # visualizer.loss_plot(history.history["loss"], history.history["val_loss"])
         # visualizer.save_figure(history_img)
-        model.save(model_file_path)
+        #model.save(model_file_path)
 
         # Pytorch
-        # torch.save(model.state_dict(), model_file_path)
+        torch.save(model.state_dict(), model_file_path)
 
         com.logger.info("save_model -> {}".format(model_file_path))
         print("============== END TRAINING ==============")
