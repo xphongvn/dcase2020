@@ -244,8 +244,8 @@ if __name__ == "__main__":
 
             def __init__(self, data, validation_split=param["fit"]["validation_split"], isValidation=False):
                 super(GetDataset, self).__init__()
-                numpy_pred = data
-                numpy_real = data
+                numpy_pred = torch.from_numpy(data).float()
+                numpy_real = torch.from_numpy(data).float()
 
                 if (validation_split):
                     split = int(data.shape[0] * (1. - validation_split))
