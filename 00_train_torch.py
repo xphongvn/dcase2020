@@ -161,6 +161,32 @@ def file_list_generator(target_dir,
     return files
 
 
+class GetDataset(Dataset):
+
+    def __init__(self, data, validation_split=param["fit"]["validation_split"], isValidation=False):
+        super(GetDataset, self).__init__()
+        numpy_pred = torch.from_numpy(data).float()
+        numpy_real = torch.from_numpy(data).float()
+
+        if (validation_split):
+            split = int(data.shape[0] * (1. - validation_split))
+
+            if (isValidation):
+                numpy_pred = numpy_pred[split:]
+                numpy_real = numpy_real[split:]
+            else:
+                numpy_pred = numpy_pred[:split]
+                numpy_real = numpy_real[:split]
+
+        self.X = numpy_pred
+        self.y = numpy_real
+
+    def __getitem__(self, index):
+        return (self.X[index], self.y[index])
+
+    def __len__(self):
+        return self.X.shape[0]
+
 ########################################################################
 
 
@@ -239,32 +265,6 @@ if __name__ == "__main__":
         #                     verbose=param["fit"]["verbose"])
 
         # PyTorch
-
-        class GetDataset(Dataset):
-
-            def __init__(self, data, validation_split=param["fit"]["validation_split"], isValidation=False):
-                super(GetDataset, self).__init__()
-                numpy_pred = torch.from_numpy(data).float()
-                numpy_real = torch.from_numpy(data).float()
-
-                if (validation_split):
-                    split = int(data.shape[0] * (1. - validation_split))
-
-                    if(isValidation):
-                        numpy_pred = numpy_pred[split:]
-                        numpy_real = numpy_real[split:]
-                    else:
-                        numpy_pred = numpy_pred[:split]
-                        numpy_real = numpy_real[:split]
-
-                self.X = numpy_pred
-                self.y = numpy_real
-
-            def __getitem__(self, index):
-                return (self.X[index], self.y[index])
-
-            def __len__(self):
-                return self.X.shape[0]
 
         train_dataset = GetDataset(data=train_data, isValidation=False)
         val_dataset = GetDataset(data=train_data, isValidation=True)
