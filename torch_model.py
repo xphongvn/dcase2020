@@ -4,6 +4,7 @@ import torch
 import torch.nn as nn
 from torch.utils.data import Dataset
 
+device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
 class BaselineModel(nn.Module):
     def __init__(self, inputDim):
@@ -57,7 +58,7 @@ class BaselineModel(nn.Module):
             return encoded, decoded
 
 def get_model(inputDim):
-    return BaselineModel(inputDim).cuda()
+    return BaselineModel(inputDim).to(device)
 
 def load_model(file_path, inputDims):
     model = get_model(inputDims)

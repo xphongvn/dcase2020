@@ -26,6 +26,8 @@ import keras_model
 # Pytorch
 # import torch_model
 # from torch.utils.data.sampler import SubsetRandomSampler
+#device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+
 
 ########################################################################
 
@@ -227,32 +229,6 @@ if __name__ == "__main__":
         
         #PyTorch
         """
-        
-        # class GetDatasetDraft(Dataset):
-        #     def __init__(self, data, transform=None):
-        #         self.data = data
-        #         self.target = data #Default
-        #         self.transform = transform
-        # 
-        #     def __getitem__(self, index):
-        #         x = self.data[index]
-        #         y = self.target[index]
-        #         return x, y
-        # 
-        #     def __len__(self):
-        #         return len(self.data)
-
-                
-        # split = DataSplit(dataset, shuffle=param["fit"]["shuffle], validation_split=param["fit"]["validation_split"])
-        # train_loader, val_loader = split.get_split(batch_size=param["fit"]["batch_size"], num_workers=2)
-        
-        # trainloader = torch.utils.data.DataLoader(train_data, 
-        #                                         batch_size=param["fit"]["batch_size"],
-        #                                         shuffle=param["fit"]["shuffle"],
-        #                                         num_workers=2)
-        
-        
-        
         class GetDataset(Dataset):
 
             def __init__(self, data, validation_split=param["fit"]["validation_split"], isValidation=False):
@@ -279,8 +255,8 @@ if __name__ == "__main__":
             def __len__(self):
                 return self.X.shape[0]
 
-        train_dataset = GetDataset(isValidation=False)
-        val_dataset = GetDataset(isValidation=True)
+        train_dataset = GetDataset(data=train_data, isValidation=False)
+        val_dataset = GetDataset(data=train_data, isValidation=True)
                         
         train_loader = DataLoader(dataset=train_dataset, 
                                   batch_size=param["fit"]["batch_size"],
@@ -293,34 +269,56 @@ if __name__ == "__main__":
                                   num_workers=2
                                   )
 
-
-        for e in range(param["fit"]["epochs"]):
+        def train_epoch(model, loss_fn, dataloader):
+            model.train()
             epoch_loss = 0.0
-            for i, (feature, target) in enumerate(dataloader):
-                feature, target = feature.cuda(), target.cuda()
+            for i, (feature, target) in enumerate(train_loader):
+                feature, target = feature.to(device), target.to(device)
                 optimizer.zero_grad()
                 #forward
                 output = model(feature)
-                loss = criterion(output, target)
+                loss = loss_fn(output, target)
                 #backward
                 loss.backward()
                 optimizer.step()
-                
-                epoch_loss += loss.item()
-                # ===================log========================
-                print('epoch [{}/{}], loss:{:.4f}'
-                    .format(epoch + 1, num_epochs, loss.data[0]))
+            return epoch_loss/len(dataloader)
+        
+        def evaluate_epoch(model, loss_fn, dataloader):
+            model.eval()
+            epoch_loss = 0.0
+            with torch.no_grad():
+                for feature, target in dataloader:
+                    feature, target = feature.to(device), target.to(device)
+                    output = model(feature)
+                    loss = loss_fn(output, target)
+                    epoch_loss += loss.item()
+            return epoch_loss/len(dataloader)
+                    
+            
+        # for e in range(param["fit"]["epochs"]):
+        #     epoch_loss = 0.0
+        #     # train_loss_list = []
+        #     
+        #         
+        #         epoch_loss += loss.item()
+        #         # ===================log========================
+        #         print('epoch [{}/{}], loss:{:.4f}'
+        #             .format(epoch + 1, num_epochs, loss.data[0]))
 
         for e in range(param["fit"]["epochs"]):
-            epoch_loss = 0.0
-            
-
+            print('Training...')
+            train_epoch(model, criterion, train_loader)
+            print('Evaluating...')
+            evaluate_epoch(model, criterion, val_loader)
 
             """
 
-        visualizer.loss_plot(history.history["loss"], history.history["val_loss"])
-        visualizer.save_figure(history_img)
+        # visualizer.loss_plot(history.history["loss"], history.history["val_loss"])
+        # visualizer.save_figure(history_img)
         model.save(model_file_path)
+
+        #Pytorch
+        #torch.save(model.state_dict(), model_file_path)
 
 
 
