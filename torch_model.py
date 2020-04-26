@@ -51,10 +51,10 @@ class BaselineModel(nn.Module):
             nn.Linear(128, inputDim),
         )
 
-        def forward(self, x):
-            x = self.encoder(x)
-            x = self.decoder(x)
-            return x
+    def forward(self, x):
+        x = self.encoder(x)
+        x = self.decoder(x)
+        return x
 
 def get_model(inputDim):
     # return BaselineModel(inputDim).to(device)
