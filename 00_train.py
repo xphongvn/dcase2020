@@ -23,10 +23,8 @@ from tqdm import tqdm
 # original lib
 import common as com
 import keras_model
-# Pytorch
-# import torch_model
-# from torch.utils.data.sampler import SubsetRandomSampler
-#device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+
+os.environ["CUDA_VISIBLE_DEVICES"]="1"
 
 
 ########################################################################
@@ -204,17 +202,9 @@ if __name__ == "__main__":
         print("============== MODEL TRAINING ==============")
         model = keras_model.get_model(param["feature"]["n_mels"] * param["feature"]["frames"])
 
-        # Pytorch
-        # model = torch_model.get_model(param["feature"]["n_mels"] * param["feature"]["frames"])
-
         model.summary()
-        # Pytorch
-        # print(model)
 
         model.compile(**param["fit"]["compile"])
-        # Pytorch
-        # criterion = nn.MSELoss()
-        # optimizer = torch.optim.Adam(model.parameters())
 
         # Behavior of keras: Split training and validation with the defined percentage, and then shuffle
         # the training; validation is not shuffled
@@ -226,101 +216,10 @@ if __name__ == "__main__":
                             shuffle=param["fit"]["shuffle"],
                             validation_split=param["fit"]["validation_split"],
                             verbose=param["fit"]["verbose"])
-        
-        #PyTorch
-        """
-        class GetDataset(Dataset):
 
-            def __init__(self, data, validation_split=param["fit"]["validation_split"], isValidation=False):
-                super(GetDataset, self).__init__()
-                numpy_pred = data
-                numpy_real = data
-                
-                if (validation_split):
-                    split = int(data.shape[0] * (1. - validation_split))
-                
-                    if(isValidation):
-                        numpy_pred = numpy_pred[split:]
-                        numpy_real = numpy_real[split:]
-                    else:
-                        numpy_pred = numpy_pred[:split]
-                        numpy_real = numpy_real[:split]
-                
-                self.X = numpy_pred
-                self.y = numpy_real
-        
-            def __getitem__(self, index):
-                return (self.X[index], self.y[index])
-        
-            def __len__(self):
-                return self.X.shape[0]
-
-        train_dataset = GetDataset(data=train_data, isValidation=False)
-        val_dataset = GetDataset(data=train_data, isValidation=True)
-                        
-        train_loader = DataLoader(dataset=train_dataset, 
-                                  batch_size=param["fit"]["batch_size"],
-                                  shuffle=param["fit"]["shuffle"],
-                                  num_workers=2
-                                  )
-        val_loader = DataLoader(dataset=val_dataset, 
-                                  batch_size=param["fit"]["batch_size"],
-                                  shuffle=False,
-                                  num_workers=2
-                                  )
-
-        def train_epoch(model, loss_fn, dataloader):
-            model.train()
-            epoch_loss = 0.0
-            for i, (feature, target) in enumerate(train_loader):
-                feature, target = feature.to(device), target.to(device)
-                optimizer.zero_grad()
-                #forward
-                output = model(feature)
-                loss = loss_fn(output, target)
-                #backward
-                loss.backward()
-                optimizer.step()
-            return epoch_loss/len(dataloader)
-        
-        def evaluate_epoch(model, loss_fn, dataloader):
-            model.eval()
-            epoch_loss = 0.0
-            with torch.no_grad():
-                for feature, target in dataloader:
-                    feature, target = feature.to(device), target.to(device)
-                    output = model(feature)
-                    loss = loss_fn(output, target)
-                    epoch_loss += loss.item()
-            return epoch_loss/len(dataloader)
-                    
-            
-        # for e in range(param["fit"]["epochs"]):
-        #     epoch_loss = 0.0
-        #     # train_loss_list = []
-        #     
-        #         
-        #         epoch_loss += loss.item()
-        #         # ===================log========================
-        #         print('epoch [{}/{}], loss:{:.4f}'
-        #             .format(epoch + 1, num_epochs, loss.data[0]))
-
-        for e in range(param["fit"]["epochs"]):
-            print('Training...')
-            train_epoch(model, criterion, train_loader)
-            print('Evaluating...')
-            evaluate_epoch(model, criterion, val_loader)
-
-            """
-
-        # visualizer.loss_plot(history.history["loss"], history.history["val_loss"])
-        # visualizer.save_figure(history_img)
+        visualizer.loss_plot(history.history["loss"], history.history["val_loss"])
+        visualizer.save_figure(history_img)
         model.save(model_file_path)
-
-        #Pytorch
-        #torch.save(model.state_dict(), model_file_path)
-
-
 
 
         com.logger.info("save_model -> {}".format(model_file_path))
