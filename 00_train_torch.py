@@ -187,6 +187,33 @@ class GetDataset(Dataset):
     def __len__(self):
         return self.X.shape[0]
 
+
+def train_epoch(model, loss_fn, dataloader):
+    model.train()
+    epoch_loss = 0.0
+    for i, (feature, target) in enumerate(train_loader):
+        feature, target = feature.to(device), target.to(device)
+        optimizer.zero_grad()
+        #forward
+        output = model(feature)
+        loss = loss_fn(output, target)
+        #backward
+        loss.backward()
+        optimizer.step()
+    return epoch_loss/len(dataloader)
+
+def evaluate_epoch(model, loss_fn, dataloader):
+    model.eval()
+    epoch_loss = 0.0
+    with torch.no_grad():
+        for feature, target in dataloader:
+            feature, target = feature.to(device), target.to(device)
+            output = model(feature)
+            loss = loss_fn(output, target)
+            epoch_loss += loss.item()
+    return epoch_loss/len(dataloader)
+
+
 ########################################################################
 
 
@@ -279,31 +306,6 @@ if __name__ == "__main__":
                                   shuffle=False,
                                   num_workers=2
                                   )
-
-        def train_epoch(model, loss_fn, dataloader):
-            model.train()
-            epoch_loss = 0.0
-            for i, (feature, target) in enumerate(train_loader):
-                feature, target = feature.to(device), target.to(device)
-                optimizer.zero_grad()
-                #forward
-                output = model(feature)
-                loss = loss_fn(output, target)
-                #backward
-                loss.backward()
-                optimizer.step()
-            return epoch_loss/len(dataloader)
-
-        def evaluate_epoch(model, loss_fn, dataloader):
-            model.eval()
-            epoch_loss = 0.0
-            with torch.no_grad():
-                for feature, target in dataloader:
-                    feature, target = feature.to(device), target.to(device)
-                    output = model(feature)
-                    loss = loss_fn(output, target)
-                    epoch_loss += loss.item()
-            return epoch_loss/len(dataloader)
 
         for e in range(param["fit"]["epochs"]):
             print('Training...')
