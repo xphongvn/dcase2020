@@ -23,8 +23,9 @@ from tqdm import tqdm
 # original lib
 import common as com
 import keras_model
-#Pytorch
-#import torch_model
+# Pytorch
+# import torch_model
+# from torch.utils.data.sampler import SubsetRandomSampler
 
 ########################################################################
 
@@ -200,18 +201,22 @@ if __name__ == "__main__":
         # train model
         print("============== MODEL TRAINING ==============")
         model = keras_model.get_model(param["feature"]["n_mels"] * param["feature"]["frames"])
-        #Pytorch
-        #model = torch_model.get_model(param["feature"]["n_mels"] * param["feature"]["frames"])
+
+        # Pytorch
+        # model = torch_model.get_model(param["feature"]["n_mels"] * param["feature"]["frames"])
 
         model.summary()
-        #Pytorch
-        #print(model)
+        # Pytorch
+        # print(model)
 
         model.compile(**param["fit"]["compile"])
-        #Pytorch
-        #criterion = nn.MSELoss()
-        #optimizer = torch.optim.Adam(model.parameters())
+        # Pytorch
+        # criterion = nn.MSELoss()
+        # optimizer = torch.optim.Adam(model.parameters())
 
+        # Behavior of keras: Split training and validation with the defined percentage, and then shuffle
+        # the training; validation is not shuffled
+        # https://keras.io/getting-started/faq/#how-is-the-validation-split-computed
         history = model.fit(train_data,
                             train_data,
                             epochs=param["fit"]["epochs"],
@@ -222,23 +227,96 @@ if __name__ == "__main__":
         
         #PyTorch
         """
-        trainloader = torch.utils.data.DataLoader(train_data, 
-                                                batch_size=param["fit"]["batch_size"],
-                                                shuffle=param["fit"]["shuffle"],
-                                                num_workers=2)
         
-        for i in range(param["fit"]["epochs"]):
-            #forward
-            output = model(train_data)
-            loss = criterion(output, train_data)
-            #backward
-            optimizer.zero_grad()
-            loss.backward()
-            optimizer.step()
-            # ===================log========================
-            print('epoch [{}/{}], loss:{:.4f}'
-                .format(epoch + 1, num_epochs, loss.data[0]))
-        """
+        # class GetDatasetDraft(Dataset):
+        #     def __init__(self, data, transform=None):
+        #         self.data = data
+        #         self.target = data #Default
+        #         self.transform = transform
+        # 
+        #     def __getitem__(self, index):
+        #         x = self.data[index]
+        #         y = self.target[index]
+        #         return x, y
+        # 
+        #     def __len__(self):
+        #         return len(self.data)
+
+                
+        # split = DataSplit(dataset, shuffle=param["fit"]["shuffle], validation_split=param["fit"]["validation_split"])
+        # train_loader, val_loader = split.get_split(batch_size=param["fit"]["batch_size"], num_workers=2)
+        
+        # trainloader = torch.utils.data.DataLoader(train_data, 
+        #                                         batch_size=param["fit"]["batch_size"],
+        #                                         shuffle=param["fit"]["shuffle"],
+        #                                         num_workers=2)
+        
+        
+        
+        class GetDataset(Dataset):
+
+            def __init__(self, data, validation_split=param["fit"]["validation_split"], isValidation=False):
+                super(GetDataset, self).__init__()
+                numpy_pred = data
+                numpy_real = data
+                
+                if (validation_split):
+                    split = int(data.shape[0] * (1. - validation_split))
+                
+                    if(isValidation):
+                        numpy_pred = numpy_pred[split:]
+                        numpy_real = numpy_real[split:]
+                    else:
+                        numpy_pred = numpy_pred[:split]
+                        numpy_real = numpy_real[:split]
+                
+                self.X = numpy_pred
+                self.y = numpy_real
+        
+            def __getitem__(self, index):
+                return (self.X[index], self.y[index])
+        
+            def __len__(self):
+                return self.X.shape[0]
+
+        train_dataset = GetDataset(isValidation=False)
+        val_dataset = GetDataset(isValidation=True)
+                        
+        train_loader = DataLoader(dataset=train_dataset, 
+                                  batch_size=param["fit"]["batch_size"],
+                                  shuffle=param["fit"]["shuffle"],
+                                  num_workers=2
+                                  )
+        val_loader = DataLoader(dataset=val_dataset, 
+                                  batch_size=param["fit"]["batch_size"],
+                                  shuffle=False,
+                                  num_workers=2
+                                  )
+
+
+        for e in range(param["fit"]["epochs"]):
+            epoch_loss = 0.0
+            for i, (feature, target) in enumerate(dataloader):
+                feature, target = feature.cuda(), target.cuda()
+                optimizer.zero_grad()
+                #forward
+                output = model(feature)
+                loss = criterion(output, target)
+                #backward
+                loss.backward()
+                optimizer.step()
+                
+                epoch_loss += loss.item()
+                # ===================log========================
+                print('epoch [{}/{}], loss:{:.4f}'
+                    .format(epoch + 1, num_epochs, loss.data[0]))
+
+        for e in range(param["fit"]["epochs"]):
+            epoch_loss = 0.0
+            
+
+
+            """
 
         visualizer.loss_plot(history.history["loss"], history.history["val_loss"])
         visualizer.save_figure(history_img)
