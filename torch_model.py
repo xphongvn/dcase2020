@@ -53,7 +53,7 @@ class BaselineModel(nn.Module):
 
         def forward(self, x):
             encoded = self.encoder(x)
-            decoded = self.decoder(x),
+            decoded = self.decoder(x)
             return encoded, decoded
 
 def get_model(inputDim):
