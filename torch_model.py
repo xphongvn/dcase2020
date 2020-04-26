@@ -57,8 +57,8 @@ class BaselineModel(nn.Module):
         return x
 
 def get_model(inputDim):
-    # return BaselineModel(inputDim).to(device)
-    return BaselineModel(inputDim)
+    return BaselineModel(inputDim).to(device)
+    # return BaselineModel(inputDim)
 
 def load_model(file_path, inputDims):
     model = get_model(inputDims)

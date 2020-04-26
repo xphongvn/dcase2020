@@ -284,7 +284,7 @@ if __name__ == "__main__":
             model.train()
             epoch_loss = 0.0
             for i, (feature, target) in enumerate(train_loader):
-                # feature, target = feature.to(device), target.to(device)
+                feature, target = feature.to(device), target.to(device)
                 optimizer.zero_grad()
                 #forward
                 output = model(feature)
@@ -299,7 +299,7 @@ if __name__ == "__main__":
             epoch_loss = 0.0
             with torch.no_grad():
                 for feature, target in dataloader:
-                    # feature, target = feature.to(device), target.to(device)
+                    feature, target = feature.to(device), target.to(device)
                     output = model(feature)
                     loss = loss_fn(output, target)
                     epoch_loss += loss.item()
