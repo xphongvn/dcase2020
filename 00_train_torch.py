@@ -24,7 +24,7 @@ from tqdm import tqdm
 import common as com
 #import keras_model
 
-os.environ["CUDA_VISIBLE_DEVICES"] = "1"
+#os.environ["CUDA_VISIBLE_DEVICES"] = "1"
 
 # Pytorch
 import torch
@@ -34,7 +34,7 @@ from torch.utils.data import DataLoader
 
 import torch_model
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
-
+print(device)
 
 ########################################################################
 
@@ -200,6 +200,7 @@ def train_epoch(model, loss_fn, dataloader):
         #backward
         loss.backward()
         optimizer.step()
+        epoch_loss += loss.item()
     return epoch_loss/len(dataloader)
 
 def evaluate_epoch(model, loss_fn, dataloader):
@@ -309,9 +310,11 @@ if __name__ == "__main__":
 
         for e in range(param["fit"]["epochs"]):
             print('Training...')
-            train_epoch(model, criterion, train_loader)
+            loss_train_epoch = train_epoch(model, criterion, train_loader)
+            print("Train Epoch: {} [Train loss: {}]".format(e, loss_train_epoch))
             print('Evaluating...')
-            evaluate_epoch(model, criterion, val_loader)
+            loss_eval_epoch = evaluate_epoch(model, criterion, val_loader)
+            print("Eval Epoch: {} [Eval loss: {}]".format(e, loss_eval_epoch))
 
         # visualizer.loss_plot(history.history["loss"], history.history["val_loss"])
         # visualizer.save_figure(history_img)

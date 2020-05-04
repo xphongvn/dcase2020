@@ -63,3 +63,4 @@ def get_model(inputDim):
 def load_model(file_path, inputDims):
     model = get_model(inputDims)
     model.load_state_dict(torch.load(file_path))
+    return model
