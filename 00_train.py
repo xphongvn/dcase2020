@@ -24,9 +24,6 @@ from tqdm import tqdm
 import common as com
 import keras_model
 
-os.environ["CUDA_VISIBLE_DEVICES"]="1"
-
-
 ########################################################################
 
 
@@ -163,7 +160,7 @@ if __name__ == "__main__":
         sys.exit(-1)
         
     # make output directory
-    os.makedirs(param["model_directory"], exist_ok=True)
+    os.makedirs(param["model_directory_tf"], exist_ok=True)
 
     # initialize the visualizer
     visualizer = visualizer()
@@ -178,9 +175,9 @@ if __name__ == "__main__":
 
         # set path
         machine_type = os.path.split(target_dir)[1]
-        model_file_path = "{model}/model_{machine_type}.hdf5".format(model=param["model_directory"],
+        model_file_path = "{model}/model_{machine_type}.hdf5".format(model=param["model_directory_tf"],
                                                                      machine_type=machine_type)
-        history_img = "{model}/history_{machine_type}.png".format(model=param["model_directory"],
+        history_img = "{model}/history_{machine_type}.png".format(model=param["model_directory_tf"],
                                                                   machine_type=machine_type)
 
         if os.path.exists(model_file_path):

@@ -159,7 +159,7 @@ if __name__ == "__main__":
         sys.exit(-1)
 
     # make output result directory
-    os.makedirs(param["result_directory"], exist_ok=True)
+    os.makedirs(param["result_directory_torch"], exist_ok=True)
 
     # load base directory
     dirs = com.select_dirs(param=param, mode=mode)
@@ -175,7 +175,7 @@ if __name__ == "__main__":
 
         print("============== MODEL LOAD ==============")
         # set model path
-        model_file = "{model}/model_{machine_type}.hdf5".format(model=param["model_directory"],
+        model_file = "{model}/model_{machine_type}.hdf5".format(model=param["model_directory_torch"],
                                                                 machine_type=machine_type)
 
         # load model file
@@ -201,7 +201,7 @@ if __name__ == "__main__":
 
             # setup anomaly score file path
             anomaly_score_csv = "{result}/anomaly_score_{machine_type}_{id_str}.csv".format(
-                                                                                     result=param["result_directory"],
+                                                                                     result=param["result_directory_torch"],
                                                                                      machine_type=machine_type,
                                                                                      id_str=id_str)
             anomaly_score_list = []
@@ -250,6 +250,6 @@ if __name__ == "__main__":
 
     if mode:
         # output results
-        result_path = "{result}/{file_name}".format(result=param["result_directory"], file_name=param["result_file"])
+        result_path = "{result}/{file_name}".format(result=param["result_directory_torch"], file_name=param["result_file_torch"])
         com.logger.info("AUC and pAUC results -> {}".format(result_path))
         save_csv(save_file_path=result_path, save_data=csv_lines)
