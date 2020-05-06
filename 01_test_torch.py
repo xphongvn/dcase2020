@@ -175,7 +175,7 @@ if __name__ == "__main__":
 
         print("============== MODEL LOAD ==============")
         # set model path
-        model_file = "{model}/model_{machine_type}.hdf5".format(model=param["model_directory_torch"],
+        model_file = "{model}/model_{machine_type}.torch".format(model=param["model_directory_torch"],
                                                                 machine_type=machine_type)
 
         # load model file
@@ -184,7 +184,6 @@ if __name__ == "__main__":
             sys.exit(-1)
         print("Loading model file: {}".format(model_file))
         model = torch_model.load_model(model_file, param["feature"]["n_mels"] * param["feature"]["frames"])
-        #model.summary()
         print(model)
 
         if mode:
@@ -217,10 +216,15 @@ if __name__ == "__main__":
                                                     hop_length=param["feature"]["hop_length"],
                                                     power=param["feature"]["power"])
 
-                    data_cuda = Variable(torch.from_numpy(data)).cuda()
-                    pred = model(data_cuda.float())
-                    pred_cpu = pred.cpu()
-                    pred_cpu = pred_cpu.detach().numpy()
+                    if device=="cuda:0":
+                        data_cuda = Variable(torch.from_numpy(data)).cuda()
+                        pred = model(data_cuda.float())
+                        pred_cpu = pred.cpu()
+                        pred_cpu = pred_cpu.detach().numpy()
+                    else:
+                        data_cpu = Variable(torch.from_numpy(data)).cpu()
+                        pred = model(data_cpu.float())
+                        pred_cpu = pred.detach().numpy()
                     errors = numpy.mean(numpy.square(data - pred_cpu), axis=1)
                     y_pred[file_idx] = numpy.mean(errors)
                     anomaly_score_list.append([os.path.basename(file_path), y_pred[file_idx]])

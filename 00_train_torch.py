@@ -11,6 +11,7 @@
 import os
 import glob
 import sys
+import time
 ########################################################################
 
 
@@ -245,7 +246,7 @@ if __name__ == "__main__":
 
         # set path
         machine_type = os.path.split(target_dir)[1]
-        model_file_path = "{model}/model_{machine_type}.hdf5".format(model=param["model_directory_torch"],
+        model_file_path = "{model}/model_{machine_type}.torch".format(model=param["model_directory_torch"],
                                                                      machine_type=machine_type)
         history_img = "{model}/history_{machine_type}.png".format(model=param["model_directory_torch"],
                                                                   machine_type=machine_type)
@@ -267,60 +268,58 @@ if __name__ == "__main__":
 
         # train model
         print("============== MODEL TRAINING ==============")
-        #model = keras_model.get_model(param["feature"]["n_mels"] * param["feature"]["frames"])
 
-        # Pytorch
+        # Pytorch load model with input dimension
         model = torch_model.get_model(param["feature"]["n_mels"] * param["feature"]["frames"])
-
-        #model.summary()
-        # Pytorch
         print(model)
 
-        #model.compile(**param["fit"]["compile"])
-        # Pytorch
-        criterion = nn.MSELoss()
-        optimizer = torch.optim.Adam(model.parameters())
+        # Pytorch's model compile with loss and optimizer
+        if param["fit"]["compile"]["loss"] == "mean_squared_error":
+            criterion = nn.MSELoss()
+        else:
+            raise("Not implemented other loss function!")
 
-        # Behavior of keras: Split training and validation with the defined percentage, and then shuffle
-        # the training; validation is not shuffled
-        # https://keras.io/getting-started/faq/#how-is-the-validation-split-computed
-        # history = model.fit(train_data,
-        #                     train_data,
-        #                     epochs=param["fit"]["epochs"],
-        #                     batch_size=param["fit"]["batch_size"],
-        #                     shuffle=param["fit"]["shuffle"],
-        #                     validation_split=param["fit"]["validation_split"],
-        #                     verbose=param["fit"]["verbose"])
+        if param["fit"]["compile"]["optimizer"] == "adam":
+            optimizer = torch.optim.Adam(model.parameters())
+        else:
+            raise("Not implemented other optimizer!")
 
-        # PyTorch
+        # PyTorch's loading dataset for training and validating
 
         train_dataset = GetDataset(data=train_data, isValidation=False)
         val_dataset = GetDataset(data=train_data, isValidation=True)
-
         train_loader = DataLoader(dataset=train_dataset,
                                   batch_size=param["fit"]["batch_size"],
                                   shuffle=param["fit"]["shuffle"],
                                   num_workers=2
                                   )
+        # Batch loader
         val_loader = DataLoader(dataset=val_dataset,
                                   batch_size=param["fit"]["batch_size"],
                                   shuffle=False,
                                   num_workers=2
                                   )
 
+        # Pytorch Start training
+        train_losses = []
+        val_losses = []
         for e in range(param["fit"]["epochs"]):
             print('Training...')
+            time_start = time.time()
             loss_train_epoch = train_epoch(model, criterion, train_loader)
             print("Train Epoch: {} [Train loss: {}]".format(e, loss_train_epoch))
+            train_losses.append(loss_train_epoch)
             print('Evaluating...')
             loss_eval_epoch = evaluate_epoch(model, criterion, val_loader)
             print("Eval Epoch: {} [Eval loss: {}]".format(e, loss_eval_epoch))
+            val_losses.append(loss_eval_epoch)
+            time_end = time.time()
+            print("Time taken for epoch {} is: {}".format(e, time_end-time_start))
 
-        # visualizer.loss_plot(history.history["loss"], history.history["val_loss"])
-        # visualizer.save_figure(history_img)
-        #model.save(model_file_path)
+        visualizer.loss_plot(train_losses, val_losses)
+        visualizer.save_figure(history_img)
 
-        # Pytorch
+        # Pytorch save model
         torch.save(model.state_dict(), model_file_path)
 
         com.logger.info("save_model -> {}".format(model_file_path))
