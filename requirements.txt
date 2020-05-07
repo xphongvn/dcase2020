@@ -11,3 +11,5 @@ audioread==2.1.5
 setuptools==41.0.0
 tensorflow==1.15.0
 tqdm==4.23.4
+torch
+pandas

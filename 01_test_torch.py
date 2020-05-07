@@ -33,7 +33,7 @@ from torch.autograd import Variable
 ########################################################################
 
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
-
+print(device)
 ########################################################################
 # load parameter.yaml
 ########################################################################
@@ -216,7 +216,7 @@ if __name__ == "__main__":
                                                     hop_length=param["feature"]["hop_length"],
                                                     power=param["feature"]["power"])
 
-                    if device=="cuda:0":
+                    if str(device)=="cuda:0":
                         data_cuda = Variable(torch.from_numpy(data)).cuda()
                         pred = model(data_cuda.float())
                         pred_cpu = pred.cpu()
