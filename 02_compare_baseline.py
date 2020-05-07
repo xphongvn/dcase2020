@@ -1,7 +1,7 @@
 import pandas as pd
 
 baseline_file = "./result_tf/result_tf.csv"
-check_file = "./result_tf/result_tf.csv"
+check_file = "./result_torch/result_torch.csv"
 
 def read_file(file_name):
     all_df = {}
