@@ -12,41 +12,41 @@ class BaselineModel(nn.Module):
         self.encoder = nn.Sequential(
             nn.Linear(inputDim, 128),
             nn.BatchNorm1d(128),
-            nn.ReLU(),
+            nn.ReLU(True),
 
             nn.Linear(128, 128),
             nn.BatchNorm1d(128),
-            nn.ReLU(),
+            nn.ReLU(True),
 
             nn.Linear(128, 128),
             nn.BatchNorm1d(128),
-            nn.ReLU(),
+            nn.ReLU(True),
 
             nn.Linear(128, 128),
             nn.BatchNorm1d(128),
-            nn.ReLU(),
+            nn.ReLU(True),
 
             nn.Linear(128, 8),
             nn.BatchNorm1d(8),
-            nn.ReLU(),
+            nn.ReLU(True),
         )
 
         self.decoder = nn.Sequential(
             nn.Linear(8, 128),
             nn.BatchNorm1d(128),
-            nn.ReLU(),
+            nn.ReLU(True),
 
             nn.Linear(128, 128),
             nn.BatchNorm1d(128),
-            nn.ReLU(),
+            nn.ReLU(True),
 
             nn.Linear(128, 128),
             nn.BatchNorm1d(128),
-            nn.ReLU(),
+            nn.ReLU(True),
 
             nn.Linear(128, 128),
             nn.BatchNorm1d(128),
-            nn.ReLU(),
+            nn.ReLU(True),
 
             nn.Linear(128, inputDim),
         )
