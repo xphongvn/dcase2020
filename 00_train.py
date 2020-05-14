@@ -23,6 +23,7 @@ from tqdm import tqdm
 # original lib
 import common as com
 import keras_model
+import ipdb
 
 ########################################################################
 
@@ -102,9 +103,6 @@ def list_to_vector_array(file_list,
         vector array for training (this function is not used for test.)
         * dataset.shape = (number of feature vectors, dimensions of feature vectors)
     """
-    # calculate the number of dimensions
-    dims = n_mels * frames
-
     # iterate file_to_vector_array()
     for idx in tqdm(range(len(file_list)), desc=msg):
         vector_array = com.file_to_vector_array(file_list[idx],
@@ -114,7 +112,7 @@ def list_to_vector_array(file_list,
                                                 hop_length=hop_length,
                                                 power=power)
         if idx == 0:
-            dataset = numpy.zeros((vector_array.shape[0] * len(file_list), dims), float)
+            dataset = numpy.zeros((vector_array.shape[0] * len(file_list), vector_array.shape[1]), float)
         dataset[vector_array.shape[0] * idx: vector_array.shape[0] * (idx + 1), :] = vector_array
 
     return dataset
@@ -197,7 +195,7 @@ if __name__ == "__main__":
 
         # train model
         print("============== MODEL TRAINING ==============")
-        model = keras_model.get_model(param["feature"]["n_mels"] * param["feature"]["frames"])
+        model = keras_model.get_model(train_data.shape[1])
 
         model.summary()
 

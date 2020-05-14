@@ -14,6 +14,7 @@ import csv
 import re
 import itertools
 import sys
+import ipdb
 ########################################################################
 
 
@@ -211,10 +212,11 @@ if __name__ == "__main__":
                                                     n_fft=param["feature"]["n_fft"],
                                                     hop_length=param["feature"]["hop_length"],
                                                     power=param["feature"]["power"])
-                    errors = numpy.mean(numpy.square(data - model.predict(data)), axis=1)
+                    pred = model.predict(data)
+                    errors = numpy.mean(numpy.square(data - pred), axis=1)
                     y_pred[file_idx] = numpy.mean(errors)
                     anomaly_score_list.append([os.path.basename(file_path), y_pred[file_idx]])
-                except:
+                except IOError:
                     com.logger.error("file broken!!: {}".format(file_path))
 
             # save anomaly score

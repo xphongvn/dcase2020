@@ -20,6 +20,8 @@ import librosa
 import librosa.core
 import librosa.feature
 import yaml
+import ipdb
+from pyAudioAnalysis import audioFeatureExtraction
 
 ########################################################################
 
@@ -154,13 +156,45 @@ def file_to_vector_array(file_name,
     if vector_array_size < 1:
         return numpy.empty((0, dims))
 
+    # 05.1 extract extra features with pyAudioAnalysis
+    num_windows = log_mel_spectrogram.shape[1]
+    extra_features = extract_new_features(y,sr,num_windows)
+
+    # 05.2 Concatenate extra_features with log_mel_spectrogram
+    new_features = numpy.concatenate((extra_features, log_mel_spectrogram), axis=0)
+    size = new_features.shape[0] # update dimension with new features added
+    dims = size * frames # update dimension with new features added
+
     # 06 generate feature vectors by concatenating multiframes
     vector_array = numpy.zeros((vector_array_size, dims))
+
     for t in range(frames):
-        vector_array[:, n_mels * t: n_mels * (t + 1)] = log_mel_spectrogram[:, t: t + vector_array_size].T
+        vector_array[:, size * t: size * (t + 1)] = new_features[:, t: t + vector_array_size].T
 
     return vector_array
 
+# Add new features from pyAudioAnalysis
+def extract_new_features(data, sr, n):
+    # Divided data into n-windows
+    data_list = []
+    window_size = int(len(data) / n)
+    for i in range(n):
+        data_list.append(data[window_size*i:window_size*(i+1)])
+    data_list = numpy.array(data_list)
+
+    # Extract short-term features
+    features, f_names = audioFeatureExtraction.stFeatureExtraction(data, sr, window_size, window_size)
+
+    # Extract statistical features: MEAN, MAX, MIN, VAR
+    mean = numpy.mean(data_list, axis=1)
+    max = numpy.max(data_list, axis=1)
+    min = numpy.min(data_list, axis=1)
+    var = numpy.var(data_list, axis=1)
+
+    # concatenate all features
+    new_features = numpy.vstack((mean,max,min,var,features))
+
+    return new_features
 
 # load dataset
 def select_dirs(param, mode):
