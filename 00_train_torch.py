@@ -117,9 +117,6 @@ def list_to_vector_array(file_list,
         vector array for training (this function is not used for test.)
         * dataset.shape = (number of feature vectors, dimensions of feature vectors)
     """
-    # calculate the number of dimensions
-    dims = n_mels * frames
-
     # iterate file_to_vector_array()
     for idx in tqdm(range(len(file_list)), desc=msg):
         vector_array = com.file_to_vector_array(file_list[idx],
@@ -129,11 +126,10 @@ def list_to_vector_array(file_list,
                                                 hop_length=hop_length,
                                                 power=power)
         if idx == 0:
-            dataset = numpy.zeros((vector_array.shape[0] * len(file_list), dims), float)
+            dataset = numpy.zeros((vector_array.shape[0] * len(file_list), vector_array.shape[1]), float)
         dataset[vector_array.shape[0] * idx: vector_array.shape[0] * (idx + 1), :] = vector_array
 
     return dataset
-
 
 def file_list_generator(target_dir,
                         dir_name="train",
@@ -270,7 +266,7 @@ if __name__ == "__main__":
         print("============== MODEL TRAINING ==============")
 
         # Pytorch load model with input dimension
-        model = torch_model.get_model(param["feature"]["n_mels"] * param["feature"]["frames"])
+        model = torch_model.get_model(train_data.shape[1])
         print(model)
 
         # Pytorch's model compile with loss and optimizer
@@ -280,7 +276,7 @@ if __name__ == "__main__":
             raise("Not implemented other loss function!")
 
         if param["fit"]["compile"]["optimizer"] == "adam":
-            optimizer = torch.optim.Adam(model.parameters())
+            optimizer = torch.optim.Adam(model.parameters(), lr=1e-3, weight_decay=1e-5)
         else:
             raise("Not implemented other optimizer!")
 

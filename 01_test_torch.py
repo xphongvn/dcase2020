@@ -29,9 +29,8 @@ import common as com
 import torch_model
 import torch
 from torch.autograd import Variable
-
+import ipdb
 ########################################################################
-
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 print(device)
 ########################################################################
@@ -172,6 +171,7 @@ if __name__ == "__main__":
         print("\n===========================")
         print("[{idx}/{total}] {dirname}".format(dirname=target_dir, idx=idx+1, total=len(dirs)))
         machine_type = os.path.split(target_dir)[1]
+        machine_id_list = get_machine_id_list_for_test(target_dir)
 
         print("============== MODEL LOAD ==============")
         # set model path
@@ -182,8 +182,20 @@ if __name__ == "__main__":
         if not os.path.exists(model_file):
             com.logger.error("{} model not found ".format(machine_type))
             sys.exit(-1)
+
+        # Load one sample to get the inputDim
+        test_files, y_true = test_file_list_generator(target_dir, machine_id_list[0])
+
+        data = com.file_to_vector_array(test_files[0],
+                                        n_mels=param["feature"]["n_mels"],
+                                        frames=param["feature"]["frames"],
+                                        n_fft=param["feature"]["n_fft"],
+                                        hop_length=param["feature"]["hop_length"],
+                                        power=param["feature"]["power"])
+
+        input_dim = data.shape[1]
         print("Loading model file: {}".format(model_file))
-        model = torch_model.load_model(model_file, param["feature"]["n_mels"] * param["feature"]["frames"])
+        model = torch_model.load_model(model_file, input_dim)
         print(model)
 
         if mode:
@@ -192,7 +204,7 @@ if __name__ == "__main__":
             csv_lines.append(["id", "AUC", "pAUC"])
             performance = []
 
-        machine_id_list = get_machine_id_list_for_test(target_dir)
+
 
         for id_str in machine_id_list:
             # load test file
