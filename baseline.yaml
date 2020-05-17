@@ -22,6 +22,7 @@ feature:
   n_fft: 1024
   hop_length: 512
   power: 2.0
+  extra: False
 
 
 fit:

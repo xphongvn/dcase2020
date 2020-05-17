@@ -23,14 +23,16 @@ import numpy
 from tqdm import tqdm
 # original lib
 import common as com
-#import keras_model
+from visualizer import visualizer
+from torch_utils import GetDataset
+import torch_utils as tu
+
 
 #os.environ["CUDA_VISIBLE_DEVICES"] = "1"
 
 # Pytorch
 import torch
 import torch.nn as nn
-from torch.utils.data import Dataset
 from torch.utils.data import DataLoader
 
 import torch_model
@@ -38,185 +40,11 @@ device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 print(device)
 
 ########################################################################
-
-
-########################################################################
 # load parameter.yaml
 ########################################################################
 param = com.yaml_load()
-
-
 ########################################################################
-
-
-########################################################################
-# visualizer
-########################################################################
-class visualizer(object):
-    def __init__(self):
-        import matplotlib
-        matplotlib.use('PS')  # to fix Mac OS
-        import matplotlib.pyplot as plt
-        self.plt = plt
-        self.fig = self.plt.figure(figsize=(30, 10))
-        self.plt.subplots_adjust(wspace=0.3, hspace=0.3)
-
-    def loss_plot(self, loss, val_loss):
-        """
-        Plot loss curve.
-
-        loss : list [ float ]
-            training loss time series.
-        val_loss : list [ float ]
-            validation loss time series.
-
-        return   : None
-        """
-        ax = self.fig.add_subplot(1, 1, 1)
-        ax.cla()
-        ax.plot(loss)
-        ax.plot(val_loss)
-        ax.set_title("Model loss")
-        ax.set_xlabel("Epoch")
-        ax.set_ylabel("Loss")
-        ax.legend(["Train", "Validation"], loc="upper right")
-
-    def save_figure(self, name):
-        """
-        Save figure.
-
-        name : str
-            save png file path.
-
-        return : None
-        """
-        self.plt.savefig(name)
-
-
-########################################################################
-
-
-def list_to_vector_array(file_list,
-                         msg="calc...",
-                         n_mels=64,
-                         frames=5,
-                         n_fft=1024,
-                         hop_length=512,
-                         power=2.0):
-    """
-    convert the file_list to a vector array.
-    file_to_vector_array() is iterated, and the output vector array is concatenated.
-
-    file_list : list [ str ]
-        .wav filename list of dataset
-    msg : str ( default = "calc..." )
-        description for tqdm.
-        this parameter will be input into "desc" param at tqdm.
-
-    return : numpy.array( numpy.array( float ) )
-        vector array for training (this function is not used for test.)
-        * dataset.shape = (number of feature vectors, dimensions of feature vectors)
-    """
-    # iterate file_to_vector_array()
-    for idx in tqdm(range(len(file_list)), desc=msg):
-        vector_array = com.file_to_vector_array(file_list[idx],
-                                                n_mels=n_mels,
-                                                frames=frames,
-                                                n_fft=n_fft,
-                                                hop_length=hop_length,
-                                                power=power)
-        if idx == 0:
-            dataset = numpy.zeros((vector_array.shape[0] * len(file_list), vector_array.shape[1]), float)
-        dataset[vector_array.shape[0] * idx: vector_array.shape[0] * (idx + 1), :] = vector_array
-
-    return dataset
-
-def file_list_generator(target_dir,
-                        dir_name="train",
-                        ext="wav"):
-    """
-    target_dir : str
-        base directory path of the dev_data or eval_data
-    dir_name : str (default="train")
-        directory name containing training data
-    ext : str (default="wav")
-        file extension of audio files
-
-    return :
-        train_files : list [ str ]
-            file list for training
-    """
-    com.logger.info("target_dir : {}".format(target_dir))
-
-    # generate training list
-    training_list_path = os.path.abspath("{dir}/{dir_name}/*.{ext}".format(dir=target_dir, dir_name=dir_name, ext=ext))
-    files = sorted(glob.glob(training_list_path))
-    if len(files) == 0:
-        com.logger.exception("no_wav_file!!")
-
-    com.logger.info("train_file num : {num}".format(num=len(files)))
-    return files
-
-
-class GetDataset(Dataset):
-
-    def __init__(self, data, validation_split=param["fit"]["validation_split"], isValidation=False):
-        super(GetDataset, self).__init__()
-        numpy_pred = torch.from_numpy(data).float()
-        numpy_real = torch.from_numpy(data).float()
-
-        if (validation_split):
-            split = int(data.shape[0] * (1. - validation_split))
-
-            if (isValidation):
-                numpy_pred = numpy_pred[split:]
-                numpy_real = numpy_real[split:]
-            else:
-                numpy_pred = numpy_pred[:split]
-                numpy_real = numpy_real[:split]
-
-        self.X = numpy_pred
-        self.y = numpy_real
-
-    def __getitem__(self, index):
-        return (self.X[index], self.y[index])
-
-    def __len__(self):
-        return self.X.shape[0]
-
-
-def train_epoch(model, loss_fn, dataloader):
-    model.train()
-    epoch_loss = 0.0
-    for i, (feature, target) in enumerate(train_loader):
-        feature, target = feature.to(device), target.to(device)
-        optimizer.zero_grad()
-        #forward
-        output = model(feature)
-        loss = loss_fn(output, target)
-        #backward
-        loss.backward()
-        optimizer.step()
-        epoch_loss += loss.item()
-    return epoch_loss/len(dataloader)
-
-def evaluate_epoch(model, loss_fn, dataloader):
-    model.eval()
-    epoch_loss = 0.0
-    with torch.no_grad():
-        for feature, target in dataloader:
-            feature, target = feature.to(device), target.to(device)
-            output = model(feature)
-            loss = loss_fn(output, target)
-            epoch_loss += loss.item()
-    return epoch_loss/len(dataloader)
-
-
-########################################################################
-
-
-########################################################################
-# main 00_train.py
+# main 00_train_torch.py
 ########################################################################
 if __name__ == "__main__":
     # check mode
@@ -253,8 +81,8 @@ if __name__ == "__main__":
 
         # generate dataset
         print("============== DATASET_GENERATOR ==============")
-        files = file_list_generator(target_dir)
-        train_data = list_to_vector_array(files,
+        files = com.file_list_generator(target_dir)
+        train_data = com.list_to_vector_array(files,
                                           msg="generate train_dataset",
                                           n_mels=param["feature"]["n_mels"],
                                           frames=param["feature"]["frames"],
@@ -302,11 +130,11 @@ if __name__ == "__main__":
         for e in range(param["fit"]["epochs"]):
             print('Training...')
             time_start = time.time()
-            loss_train_epoch = train_epoch(model, criterion, train_loader)
+            loss_train_epoch = tu.train_epoch(model, optimizer, criterion, train_loader, device)
             print("Train Epoch: {} [Train loss: {}]".format(e, loss_train_epoch))
             train_losses.append(loss_train_epoch)
             print('Evaluating...')
-            loss_eval_epoch = evaluate_epoch(model, criterion, val_loader)
+            loss_eval_epoch = tu.evaluate_epoch(model, criterion, val_loader, device)
             print("Eval Epoch: {} [Eval loss: {}]".format(e, loss_eval_epoch))
             val_losses.append(loss_eval_epoch)
             time_end = time.time()
