@@ -1,6 +1,9 @@
 from torch.utils.data import Dataset
 import torch
-
+from sklearn.metrics import classification_report
+import ipdb
+import numpy as np
+from sklearn import metrics
 
 class GetDataset(Dataset):
     def __init__(self, data, validation_split=0.1, isValidation=False):
@@ -52,4 +55,26 @@ def evaluate_epoch(model, loss_fn, dataloader, device):
             output = model(feature)
             loss = loss_fn(output, target)
             epoch_loss += loss.item()
+    return epoch_loss/len(dataloader)
+
+
+def evaluate_acc_epoch(model, loss_fn, dataloader, device):
+    model.eval()
+    epoch_loss = 0.0
+    with torch.no_grad():
+        all_output = []
+        all_target = []
+        for feature, target in dataloader:
+            all_target.append(int(target))
+            feature, target = feature.to(device), target.to(device)
+            output = model(feature.unsqueeze(0))
+            all_output.append(float(output.cpu())) # get the real output number
+            loss = loss_fn(output, target)
+            epoch_loss += loss.item()
+        all_output_class = [int(np.round(x)) for x in all_output]
+        print(classification_report(y_true=all_output_class, y_pred=all_target))
+        auc = metrics.roc_auc_score(all_target, all_output)
+        p_auc = metrics.roc_auc_score(all_target, all_output, max_fpr=0.1)
+        print("AUC: {}".format(auc))
+        print("PAUC: {}".format(p_auc))
     return epoch_loss/len(dataloader)

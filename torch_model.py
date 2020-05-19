@@ -96,6 +96,35 @@ class _LinearUnit(torch.nn.Module):
         return torch.relu(self.bn(self.lin(x.view(x.size(0), -1))))
 
 
+class BinaryClassifier(nn.Module):
+    def __init__(self, inputDim):
+        super(BinaryClassifier, self).__init__()
+        self.mlp = nn.Sequential(
+            nn.Linear(inputDim, 128),
+            nn.BatchNorm1d(128),
+            nn.ReLU(True),
+
+            nn.Linear(128, 128),
+            nn.BatchNorm1d(128),
+            nn.ReLU(True),
+
+            nn.Linear(128, 64),
+            nn.BatchNorm1d(64),
+            nn.ReLU(True),
+
+            nn.Linear(64, 32),
+            nn.BatchNorm1d(32),
+            nn.ReLU(True),
+
+            nn.Linear(32, 1),
+            nn.Sigmoid(),
+        )
+
+    def forward(self, x):
+        x = self.mlp(x)
+        return x
+
+
 def get_model(inputDim):
     #return BaselineModel(inputDim).to(device)
     return BaselineTorch(inputDim).to(device)
