@@ -119,26 +119,24 @@ if __name__ == "__main__":
                                   )
         # Batch loader
         val_loader = DataLoader(dataset=val_dataset,
-                                  batch_size=param["fit"]["batch_size"],
-                                  shuffle=False,
-                                  num_workers=2
-                                  )
+                                batch_size=param["fit"]["batch_size"],
+                                shuffle=False,
+                                num_workers=2
+                                )
 
         # Pytorch Start training
         train_losses = []
         val_losses = []
         for e in range(param["fit"]["epochs"]):
-            print('Training...')
             time_start = time.time()
             loss_train_epoch = tu.train_epoch(model, optimizer, criterion, train_loader, device)
-            print("Train Epoch: {} [Train loss: {}]".format(e, loss_train_epoch))
             train_losses.append(loss_train_epoch)
-            print('Evaluating...')
             loss_eval_epoch = tu.evaluate_epoch(model, criterion, val_loader, device)
-            print("Eval Epoch: {} [Eval loss: {}]".format(e, loss_eval_epoch))
             val_losses.append(loss_eval_epoch)
             time_end = time.time()
-            print("Time taken for epoch {} is: {}".format(e, time_end-time_start))
+            print("Train Epoch: {} [Train loss: {}] [Eval loss: {}] [Time: {}]".format(e, loss_train_epoch,
+                                                                                       loss_eval_epoch,
+                                                                                       time_end-time_start))
 
         visualizer.loss_plot(train_losses, val_losses)
         visualizer.save_figure(history_img)

@@ -1,10 +1,3 @@
-"""
- @file   01_test.py
- @brief  Script for test
- @author Toshiki Nakamura, Yuki Nikaido, and Yohei Kawaguchi (Hitachi Ltd.)
- Copyright (C) 2020 Hitachi, Ltd. All right reserved.
-"""
-
 ########################################################################
 # import default python-library
 ########################################################################
@@ -82,7 +75,8 @@ if __name__ == "__main__":
                                         frames=param["feature"]["frames"],
                                         n_fft=param["feature"]["n_fft"],
                                         hop_length=param["feature"]["hop_length"],
-                                        power=param["feature"]["power"])
+                                        power=param["feature"]["power"],
+                                        extra_features=param["feature"]["extra"])
 
         input_dim = data.shape[1]
         print("Loading model file: {}".format(model_file))
@@ -117,17 +111,12 @@ if __name__ == "__main__":
                                                     frames=param["feature"]["frames"],
                                                     n_fft=param["feature"]["n_fft"],
                                                     hop_length=param["feature"]["hop_length"],
-                                                    power=param["feature"]["power"])
+                                                    power=param["feature"]["power"],
+                                                    extra_features=param["feature"]["extra"])
 
-                    if str(device)=="cuda:0":
-                        data_cuda = Variable(torch.from_numpy(data)).cuda()
-                        pred = model(data_cuda.float())
-                        pred_cpu = pred.cpu()
-                        pred_cpu = pred_cpu.detach().numpy()
-                    else:
-                        data_cpu = Variable(torch.from_numpy(data)).cpu()
-                        pred = model(data_cpu.float())
-                        pred_cpu = pred.detach().numpy()
+                    feed_data = torch.as_tensor(data, device=device, dtype=torch.float32)
+                    with torch.no_grad():
+                        pred_cpu = model(feed_data).to('cpu').detach().numpy().copy()
                     errors = numpy.mean(numpy.square(data - pred_cpu), axis=1)
                     y_pred[file_idx] = numpy.mean(errors)
                     anomaly_score_list.append([os.path.basename(file_path), y_pred[file_idx]])

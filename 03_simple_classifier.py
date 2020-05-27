@@ -12,8 +12,14 @@ from torch.utils.data import DataLoader, TensorDataset
 from torch import Tensor
 import time
 import torch_utils as tu
+import random
 
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+
+########################################################################
+# Set seed
+########################################################################
+com.deterministic_everything(100, pytorch=True, tf=False)
 
 ########################################################################
 # load parameter.yaml
@@ -65,7 +71,7 @@ for idx, target_dir in enumerate(dirs):
     print(model)
     criterion = nn.BCELoss()
     optimizer = torch.optim.Adam(model.parameters(), lr=1e-5, weight_decay=1e-8)
-    X_train, X_test, y_train, y_test = train_test_split(all_data, all_labels, test_size=0.2, shuffle=True)
+    X_train, X_test, y_train, y_test = train_test_split(all_data, all_labels, test_size=0.5, shuffle=True)
     train_dataset = TensorDataset(Tensor(X_train), Tensor(y_train))
     test_dataset = TensorDataset(Tensor(X_test), Tensor(y_test))
     train_loader = DataLoader(dataset=train_dataset,
@@ -78,15 +84,13 @@ for idx, target_dir in enumerate(dirs):
     train_losses = []
     val_losses = []
     for e in range(param["fit"]["epochs"]):
-        print('Training...')
         time_start = time.time()
         loss_train_epoch = tu.train_epoch(model, optimizer, criterion, train_loader, device)
-        print("Train Epoch: {} [Train loss: {}]".format(e, loss_train_epoch))
         train_losses.append(loss_train_epoch)
-        print('Evaluating...')
         loss_eval_epoch = tu.evaluate_acc_epoch(model, criterion, test_dataset, device)
-        print("Eval Epoch: {} [Eval loss: {}]".format(e, loss_eval_epoch))
         val_losses.append(loss_eval_epoch)
         time_end = time.time()
-        print("Time taken for epoch {} is: {}".format(e, time_end - time_start))
+        print("Train Epoch: {} [Train loss: {}] [Eval loss: {}] [Time: {}]".format(e,loss_train_epoch,
+                                                                                   loss_eval_epoch,
+                                                                                   time_end - time_start))
 

@@ -460,3 +460,31 @@ def test_file_list_generator(target_dir,
 
     return files, labels
 ########################################################################
+
+# Set seed all
+def deterministic_everything(seed=42, pytorch=True, tf=False):
+    """Set pseudo random everything deterministic. a.k.a. `seed_everything`
+    Universal to major frameworks.
+    Thanks to https://docs.fast.ai/dev/test.html#getting-reproducible-results
+    Thanks to https://pytorch.org/docs/stable/notes/randomness.html
+    """
+    import random
+    # Python RNG
+    random.seed(seed)
+    os.environ['PYTHONHASHSEED'] = str(seed)
+
+    # Numpy RNG
+    import numpy as np
+    np.random.seed(seed)
+
+    # Pytorch RNGs
+    if pytorch:
+        import torch
+        torch.manual_seed(seed)
+        torch.backends.cudnn.deterministic = True
+        torch.backends.cudnn.benchmark = False
+
+    # TensorFlow RNG
+    if tf:
+        import tensorflow as tf
+        tf.set_random_seed(seed)
