@@ -39,7 +39,7 @@ def train_epoch(model, optimizer, loss_fn, dataloader, device):
         optimizer.zero_grad()
         #forward
         output = model(feature)
-        loss = loss_fn(target, output)
+        loss = loss_fn(output, target)
         #backward
         loss.backward()
         optimizer.step()
@@ -55,7 +55,7 @@ def evaluate_epoch(model, loss_fn, dataloader, device):
             feature, target = feature.to(device), target.to(device)
             feature, target = feature.float(), target.float()
             output = model(feature)
-            loss = loss_fn(target, output)
+            loss = loss_fn(output, target)
             epoch_loss += loss.item()
     return epoch_loss/len(dataloader)
 
@@ -69,9 +69,10 @@ def evaluate_acc_epoch(model, loss_fn, dataloader, device):
         for feature, target in dataloader:
             all_target.append(int(target))
             feature, target = feature.to(device), target.to(device)
-            output = model(feature.unsqueeze(0))
+            feature, target = feature.float(), target.float()
+            output = model.forward(feature.unsqueeze(0))
             all_output.append(float(output.cpu())) # get the real output number
-            loss = loss_fn(output, target)
+            loss = loss_fn(output, target.unsqueeze(0))
             epoch_loss += loss.item()
         all_output_class = [int(np.round(x)) for x in all_output]
         print(classification_report(y_true=all_output_class, y_pred=all_target))

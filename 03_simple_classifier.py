@@ -71,9 +71,12 @@ for idx, target_dir in enumerate(dirs):
     print(model)
     criterion = nn.BCELoss()
     optimizer = torch.optim.Adam(model.parameters(), lr=1e-5, weight_decay=1e-8)
+
+    # split dataset
+    all_labels = np.expand_dims(all_labels,axis=1)
     X_train, X_test, y_train, y_test = train_test_split(all_data, all_labels, test_size=0.5, shuffle=True)
-    train_dataset = TensorDataset(Tensor(X_train), Tensor(y_train))
-    test_dataset = TensorDataset(Tensor(X_test), Tensor(y_test))
+    train_dataset = TensorDataset(torch.FloatTensor(X_train), torch.FloatTensor(y_train))
+    test_dataset = TensorDataset(torch.FloatTensor(X_test), torch.FloatTensor(y_test))
     train_loader = DataLoader(dataset=train_dataset,
                               batch_size=param["fit"]["batch_size"],
                               shuffle=param["fit"]["shuffle"],

@@ -60,30 +60,26 @@ class BaselineModel(nn.Module):
 class BinaryClassifier(nn.Module):
     def __init__(self, inputDim):
         super(BinaryClassifier, self).__init__()
-        self.mlp = nn.Sequential(
-            nn.Linear(inputDim, 128),
-            nn.BatchNorm1d(128),
-            nn.ReLU(True),
+        self.fc1 = nn.Linear(inputDim,128)
+        self.bn1 = nn.BatchNorm1d(128)
+        self.fc2 = nn.Linear(128, 128)
+        self.bn2 = nn.BatchNorm1d(128)
+        self.fc3 = nn.Linear(128, 64)
+        self.bn3 = nn.BatchNorm1d(64)
+        self.fc4 = nn.Linear(64, 32)
+        self.bn4 = nn.BatchNorm1d(32)
+        self.out = nn.Linear(32,1)
 
-            nn.Linear(128, 128),
-            nn.BatchNorm1d(128),
-            nn.ReLU(True),
-
-            nn.Linear(128, 64),
-            nn.BatchNorm1d(64),
-            nn.ReLU(True),
-
-            nn.Linear(64, 32),
-            nn.BatchNorm1d(32),
-            nn.ReLU(True),
-
-            nn.Linear(32, 1),
-            nn.Sigmoid(),
-        )
+        self.relu = nn.ReLU()
+        self.sigmoid = nn.Sigmoid()
 
     def forward(self, x):
-        x = self.mlp(x)
-        return x
+        layer1 = self.relu(self.bn1(self.fc1(x)))
+        layer2 = self.relu(self.bn2(self.fc2(layer1)))
+        layer3 = self.relu(self.bn3(self.fc3(layer2)))
+        layer4 = self.relu(self.bn4(self.fc4(layer3)))
+        y = self.sigmoid(self.out(layer4))
+        return y
 
 class AutoEncoder(nn.Module):
     """
@@ -135,7 +131,7 @@ class AutoEncoder(nn.Module):
 ##################################################################################
 # FUNCTION TO GET AND LOAD TORCH MODEL
 ##################################################################################
-def get_model(inputDim, model_class):
+def get_model(inputDim, model_class="BaselineModel"):
     if model_class == "BaselineModel":
         return BaselineModel(inputDim).to(device)
     elif model_class == "BinaryClassifier":
