@@ -35,10 +35,11 @@ def train_epoch(model, optimizer, loss_fn, dataloader, device):
     epoch_loss = 0.0
     for i, (feature, target) in enumerate(dataloader):
         feature, target = feature.to(device), target.to(device)
+        feature, target = feature.float(), target.float()
         optimizer.zero_grad()
         #forward
         output = model(feature)
-        loss = loss_fn(output, target)
+        loss = loss_fn(target, output)
         #backward
         loss.backward()
         optimizer.step()
@@ -52,8 +53,9 @@ def evaluate_epoch(model, loss_fn, dataloader, device):
     with torch.no_grad():
         for feature, target in dataloader:
             feature, target = feature.to(device), target.to(device)
+            feature, target = feature.float(), target.float()
             output = model(feature)
-            loss = loss_fn(output, target)
+            loss = loss_fn(target, output)
             epoch_loss += loss.item()
     return epoch_loss/len(dataloader)
 

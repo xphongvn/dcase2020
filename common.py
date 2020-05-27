@@ -206,6 +206,39 @@ def extract_new_features(data, sr, n):
 
     return new_features
 
+def file_to_vector_array_extra_only(file_name,
+                         frames=5,
+                         hop_length=512):
+    """
+    convert file_name to a vector array with extra features only.
+
+    file_name : str
+        target .wav file
+
+    return : numpy.array( numpy.array( float ) )
+        vector array
+        * dataset.shape = (dataset_size, feature_vector_length)
+    """
+    # # 02 generate melspectrogram using librosa
+    y, sr = file_load(file_name)
+    vector_array_size = int(len(y)/hop_length) - frames + 1
+    num_windows = int(len(y) / hop_length) + 1
+    extra_features = extract_new_features(y,sr,num_windows)
+
+    # 05.2 Concatenate extra_features with log_mel_spectrogram
+    #new_features = numpy.concatenate((extra_features, log_mel_spectrogram), axis=0)
+    new_features = extra_features
+    size = new_features.shape[0] # update dimension with new features added
+    dims = size * frames # update dimension with new features added
+
+    # 06 generate feature vectors by concatenating multiframes
+    vector_array = numpy.zeros((vector_array_size, dims))
+
+    for t in range(frames):
+        vector_array[:, size * t: size * (t + 1)] = new_features[:, t: t + vector_array_size].T
+
+    return vector_array
+
 # load dataset
 def select_dirs(param, mode):
     """
@@ -254,6 +287,8 @@ def list_to_vector_array(file_list,
         vector array for training (this function is not used for test.)
         * dataset.shape = (number of feature vectors, dimensions of feature vectors)
     """
+    #TODO: Check if features have been extracted -> load pickle
+
     # iterate file_to_vector_array()
     for idx in tqdm(range(len(file_list)), desc=msg):
         vector_array = file_to_vector_array(file_list[idx],
@@ -267,6 +302,29 @@ def list_to_vector_array(file_list,
             dataset = numpy.zeros((vector_array.shape[0] * len(file_list), vector_array.shape[1]), float)
         dataset[vector_array.shape[0] * idx: vector_array.shape[0] * (idx + 1), :] = vector_array
 
+    # TODO: Save pick features
+    return dataset
+
+def list_to_vector_array_extra_only(file_list,
+                         msg="calc...",
+                         n_mels=64,
+                         frames=5,
+                         n_fft=1024,
+                         hop_length=512,
+                         power=2.0,
+                         extra_features=False):
+    #TODO: Check if features have been extracted -> load pickle
+
+    # iterate file_to_vector_array()
+    for idx in tqdm(range(len(file_list)), desc=msg):
+        vector_array = file_to_vector_array_extra_only(file_list[idx],
+                                                frames=frames,
+                                                hop_length=hop_length)
+        if idx == 0:
+            dataset = numpy.zeros((vector_array.shape[0] * len(file_list), vector_array.shape[1]), float)
+        dataset[vector_array.shape[0] * idx: vector_array.shape[0] * (idx + 1), :] = vector_array
+
+    # TODO: Save pick features
     return dataset
 
 def file_list_generator(target_dir,
