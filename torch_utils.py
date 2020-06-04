@@ -4,6 +4,10 @@ from sklearn.metrics import classification_report
 import ipdb
 import numpy as np
 from sklearn import metrics
+from sklearn.model_selection import train_test_split
+import random
+
+random.seed(10)
 
 class GetDataset(Dataset):
     def __init__(self, data, validation_split=0.1, isValidation=False):
@@ -23,6 +27,22 @@ class GetDataset(Dataset):
 
         self.X = numpy_pred
         self.y = numpy_real
+
+    def __getitem__(self, index):
+        return (self.X[index], self.y[index])
+
+    def __len__(self):
+        return self.X.shape[0]
+
+class GetDatasetBinaryLabel(Dataset):
+    def __init__(self, data, anomaly_label):
+        super(GetDatasetBinaryLabel, self).__init__()
+
+        data = torch.from_numpy(data).float()
+        anomaly_label = torch.from_numpy(anomaly_label).int()
+
+        self.X = data
+        self.y = anomaly_label
 
     def __getitem__(self, index):
         return (self.X[index], self.y[index])

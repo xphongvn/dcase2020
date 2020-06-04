@@ -1,18 +1,24 @@
-dev_directory : /network/tmp1/nguyenph/dcase2020/dev
+#dev_directory : /network/tmp1/nguyenph/dcase2020/dev
 #dev_directory : /lustre04/scratch/xphongvn/dcase2020/dev
-eval_directory : /network/tmp1/nguyenph/dcase2020/eval
+#eval_directory : /network/tmp1/nguyenph/dcase2020/eval
 #eval_directory : /lustre04/scratch/xphongvn/eval
 
-#dev_directory : ./dev_data
-#eval_directory : ./eval_data
+dev_directory : ../dcase2020_data/dev
+eval_directory : ../dcase2020_data/eval
 
-model_directory_tf: ./model_tf
-result_directory_tf: ./result_tf
+model_directory_tf: ./model/model_tf6
+result_directory_tf: ./result/result_tf6
 result_file_tf: result_tf.csv
 
-model_directory_torch: ./model_torch
-result_directory_torch: ./result_torch
+model_directory_torch: ./model/model_torch
+result_directory_torch: ./result/result_torch
 result_file_torch: result_torch.csv
+
+model_directory_SVDD: ./model/SVDD1
+result_directory_SVDD: ./result/SVDD1
+
+model_directory: ./model
+reult_directory: ./result
 
 max_fpr : 0.1
 
@@ -29,7 +35,7 @@ fit:
   compile:
     optimizer : adam
     loss : mean_squared_error
-  epochs : 100
+  epochs : 20
   batch_size : 512
   shuffle : True
   validation_split : 0.1

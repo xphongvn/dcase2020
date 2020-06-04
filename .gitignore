@@ -2,10 +2,12 @@
 ### Example user template template
 ### Example user template
 # Results
+/model
+/result
 /model_tf*
 /result_tf*
-/model_torch*
-/result_torch*
+/model/model_torch
+/result/result_torch
 /dev_data
 /eval_data
 baseline.log
