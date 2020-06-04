@@ -14,6 +14,7 @@ import argparse
 import sys
 import os
 import re
+import os
 
 # additional
 import numpy
@@ -26,6 +27,8 @@ from pyAudioAnalysis import audioFeatureExtraction
 from tqdm import tqdm
 import csv
 import itertools
+import pickle
+import time
 
 ########################################################################
 
@@ -287,22 +290,42 @@ def list_to_vector_array(file_list,
         vector array for training (this function is not used for test.)
         * dataset.shape = (number of feature vectors, dimensions of feature vectors)
     """
-    #TODO: Check if features have been extracted -> load pickle
+    file_name = hash(str(str(file_list) + str(extra_features)))
+    load = os.path.exists("./pickle_data/{}.pickle".format(file_name))
 
-    # iterate file_to_vector_array()
-    for idx in tqdm(range(len(file_list)), desc=msg):
-        vector_array = file_to_vector_array(file_list[idx],
-                                                n_mels=n_mels,
-                                                frames=frames,
-                                                n_fft=n_fft,
-                                                hop_length=hop_length,
-                                                power=power,
-                                                extra_features=extra_features)
-        if idx == 0:
-            dataset = numpy.zeros((vector_array.shape[0] * len(file_list), vector_array.shape[1]), float)
-        dataset[vector_array.shape[0] * idx: vector_array.shape[0] * (idx + 1), :] = vector_array
+    if not load:
+        print("Does not find existing extracted pickle features. Extracting...")
+        time_start = time.time()
+        # iterate file_to_vector_array()
+        for idx in tqdm(range(len(file_list)), desc=msg):
+            vector_array = file_to_vector_array(file_list[idx],
+                                                    n_mels=n_mels,
+                                                    frames=frames,
+                                                    n_fft=n_fft,
+                                                    hop_length=hop_length,
+                                                    power=power,
+                                                    extra_features=extra_features)
+            if idx == 0:
+                dataset = numpy.zeros((vector_array.shape[0] * len(file_list), vector_array.shape[1]), float)
+            dataset[vector_array.shape[0] * idx: vector_array.shape[0] * (idx + 1), :] = vector_array
 
-    # TODO: Save pick features
+        print("Finished extracting features. Time taken: {}s".format(time.time() - time_start))
+
+        # Save pickle
+        print("Saving pickle file of the data")
+        time_start = time.time()
+        os.makedirs("./pickle_data", exist_ok=True)
+        with open("./pickle_data/{}.pickle".format(file_name), 'wb') as fp:
+            pickle.dump(dataset, fp, protocol=4)
+        print("Finished saving pickle file. Time taken: {}s".format(time.time()-time_start))
+    else:
+        # Load pikcle
+        print("Found existing extracted pickle features at: ./pickle_data/{}.pickle".format(file_name))
+        time_start = time.time()
+        with open("./pickle_data/{}.pickle".format(file_name), 'rb') as fp:
+            dataset = pickle.load(fp)
+        print("Finished loading pickle file. Time taken: {}s".format(time.time() - time_start))
+
     return dataset
 
 def list_to_vector_array_extra_only(file_list,
@@ -313,7 +336,6 @@ def list_to_vector_array_extra_only(file_list,
                          hop_length=512,
                          power=2.0,
                          extra_features=False):
-    #TODO: Check if features have been extracted -> load pickle
 
     # iterate file_to_vector_array()
     for idx in tqdm(range(len(file_list)), desc=msg):
@@ -324,7 +346,6 @@ def list_to_vector_array_extra_only(file_list,
             dataset = numpy.zeros((vector_array.shape[0] * len(file_list), vector_array.shape[1]), float)
         dataset[vector_array.shape[0] * idx: vector_array.shape[0] * (idx + 1), :] = vector_array
 
-    # TODO: Save pick features
     return dataset
 
 def file_list_generator(target_dir,
