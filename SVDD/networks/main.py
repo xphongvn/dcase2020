@@ -4,7 +4,7 @@ from .cifar10_LeNet_elu import CIFAR10_LeNet_ELU, CIFAR10_LeNet_ELU_Autoencoder
 from .dcase import SVDD_Rep, SVDD_Rep_Autoencoder
 
 
-def build_network(net_name):
+def build_network(net_name, inputDim=None):
     """Builds the neural network."""
 
     implemented_networks = ('mnist_LeNet', 'cifar10_LeNet', 'cifar10_LeNet_ELU', 'dcase')
@@ -22,12 +22,12 @@ def build_network(net_name):
         net = CIFAR10_LeNet_ELU()
 
     if net_name == 'dcase':
-        net = SVDD_Rep(640)
+        net = SVDD_Rep(inputDim)
 
     return net
 
 
-def build_autoencoder(net_name):
+def build_autoencoder(net_name, inputDim):
     """Builds the corresponding autoencoder network."""
 
     implemented_networks = ('mnist_LeNet', 'cifar10_LeNet', 'cifar10_LeNet_ELU', 'dcase')
@@ -45,6 +45,6 @@ def build_autoencoder(net_name):
         ae_net = CIFAR10_LeNet_ELU_Autoencoder()
 
     if net_name == 'dcase':
-        ae_net = SVDD_Rep_Autoencoder(640)
+        ae_net = SVDD_Rep_Autoencoder(inputDim)
 
     return ae_net

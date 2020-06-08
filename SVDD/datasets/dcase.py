@@ -6,9 +6,8 @@ class DCASE_Dataset(BaseADDataset):
     def __init__(self, train_data, test_data, train_labels, test_labels, normal_class=0):
         super().__init__(root="")
         self.n_classes = 2  # 0: normal, 1: outlier
-        self.normal_classes = tuple([normal_class])
-        self.outlier_classes = list(range(0, 2))
-        self.outlier_classes.remove(normal_class)
+        self.normal_classes = tuple([0])
+        self.outlier_classes = tuple([1])
 
         # must be of type torch.utils.data.Dataset
         self.train_set = GetDatasetBinaryLabel(train_data, anomaly_label=train_labels)

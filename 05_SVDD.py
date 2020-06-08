@@ -147,7 +147,8 @@ if __name__ == '__main__':
 
         # Initialize DeepSVDD model and set neural network \phi
         deep_SVDD = DeepSVDD(cfg.settings['objective'], cfg.settings['nu'])
-        deep_SVDD.set_network(net_name)
+        inputDim = train_data.shape[1]
+        deep_SVDD.set_network(net_name, inputDim)
 
         # If specified, load Deep SVDD model (radius R, center c, network weights, and possibly autoencoder weights)
         if load_model:
@@ -173,7 +174,8 @@ if __name__ == '__main__':
                                batch_size=cfg.settings['ae_batch_size'],
                                weight_decay=cfg.settings['ae_weight_decay'],
                                device=device,
-                               n_jobs_dataloader=n_jobs_dataloader)
+                               n_jobs_dataloader=n_jobs_dataloader,
+                               inputDim = inputDim)
 
         # Log training details
         logger.info('Training optimizer: %s' % cfg.settings['optimizer_name'])

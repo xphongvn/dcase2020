@@ -290,7 +290,8 @@ def list_to_vector_array(file_list,
         vector array for training (this function is not used for test.)
         * dataset.shape = (number of feature vectors, dimensions of feature vectors)
     """
-    file_name = hash(str(str(file_list) + str(extra_features)))
+    file_name = hash(str(str(file_list) + str(extra_features)) + str(power) + str(hop_length) +
+                     str(n_fft) + str(frames) + str(n_mels))
     load = os.path.exists("./pickle_data/{}.pickle".format(file_name))
 
     if not load:

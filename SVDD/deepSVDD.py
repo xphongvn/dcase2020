@@ -52,10 +52,10 @@ class DeepSVDD(object):
             'test_scores': None,
         }
 
-    def set_network(self, net_name):
+    def set_network(self, net_name, inputDim=None):
         """Builds the neural network \phi."""
         self.net_name = net_name
-        self.net = build_network(net_name)
+        self.net = build_network(net_name, inputDim)
 
     def train(self, dataset: BaseADDataset, optimizer_name: str = 'adam', lr: float = 0.001, n_epochs: int = 50,
               lr_milestones: tuple = (), batch_size: int = 128, weight_decay: float = 1e-6, device: str = 'cuda',
@@ -87,10 +87,10 @@ class DeepSVDD(object):
 
     def pretrain(self, dataset: BaseADDataset, optimizer_name: str = 'adam', lr: float = 0.001, n_epochs: int = 100,
                  lr_milestones: tuple = (), batch_size: int = 128, weight_decay: float = 1e-6, device: str = 'cuda',
-                 n_jobs_dataloader: int = 0):
+                 n_jobs_dataloader: int = 0, inputDim = None):
         """Pretrains the weights for the Deep SVDD network \phi via autoencoder."""
 
-        self.ae_net = build_autoencoder(self.net_name)
+        self.ae_net = build_autoencoder(self.net_name, inputDim)
         self.ae_optimizer_name = optimizer_name
         self.ae_trainer = AETrainer(optimizer_name, lr=lr, n_epochs=n_epochs, lr_milestones=lr_milestones,
                                     batch_size=batch_size, weight_decay=weight_decay, device=device,
