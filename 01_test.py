@@ -101,7 +101,8 @@ if __name__ == "__main__":
                                                     n_fft=param["feature"]["n_fft"],
                                                     hop_length=param["feature"]["hop_length"],
                                                     power=param["feature"]["power"],
-                                                    extra_features=param["feature"]["extra"])
+                                                    extra_features=param["feature"]["extra"],
+                                                    extra_only=param["feature"]["extra_only"])
                     pred = model.predict(data)
                     errors = numpy.mean(numpy.square(data - pred), axis=1)
                     y_pred[file_idx] = numpy.mean(errors)

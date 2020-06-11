@@ -29,6 +29,7 @@ feature:
   hop_length: 512
   power: 2.0
   extra: False
+  extra_only: False
 
 
 fit:

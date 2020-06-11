@@ -131,7 +131,8 @@ def file_to_vector_array(file_name,
                          n_fft=1024,
                          hop_length=512,
                          power=2.0,
-                         extra_features = False):
+                         extra_features=False,
+                         extra_only=False):
     """
     convert file_name to a vector array.
 
@@ -142,6 +143,9 @@ def file_to_vector_array(file_name,
         vector array
         * dataset.shape = (dataset_size, feature_vector_length)
     """
+    if extra_only:
+        return file_to_vector_array_extra_only(file_name, frames, hop_length)
+
     # 01 calculate the number of dimensions
     dims = n_mels * frames
 
@@ -209,6 +213,7 @@ def extract_new_features(data, sr, n):
 
     return new_features
 
+
 def file_to_vector_array_extra_only(file_name,
                          frames=5,
                          hop_length=512):
@@ -275,7 +280,8 @@ def list_to_vector_array(file_list,
                          n_fft=1024,
                          hop_length=512,
                          power=2.0,
-                         extra_features=False):
+                         extra_features=False,
+                         extra_only=False):
     """
     convert the file_list to a vector array.
     file_to_vector_array() is iterated, and the output vector array is concatenated.
@@ -290,27 +296,35 @@ def list_to_vector_array(file_list,
         vector array for training (this function is not used for test.)
         * dataset.shape = (number of feature vectors, dimensions of feature vectors)
     """
-    file_name = hash(str(str(file_list) + str(extra_features)) + str(power) + str(hop_length) +
-                     str(n_fft) + str(frames) + str(n_mels))
+    if extra_only:
+        extra_features = True
+        file_name = hash(str(str(file_list) + str(extra_features)) + str(power) + str(hop_length) +
+                         str(n_fft) + str(frames) + str(n_mels) + str(extra_only))
+    else:
+        file_name = hash(str(str(file_list) + str(extra_features)) + str(power) + str(hop_length) +
+                         str(n_fft) + str(frames) + str(n_mels))
     load = os.path.exists("./pickle_data/{}.pickle".format(file_name))
 
     if not load:
         print("Does not find existing extracted pickle features. Extracting...")
         time_start = time.time()
         # iterate file_to_vector_array()
-        for idx in tqdm(range(len(file_list)), desc=msg):
-            vector_array = file_to_vector_array(file_list[idx],
-                                                    n_mels=n_mels,
-                                                    frames=frames,
-                                                    n_fft=n_fft,
-                                                    hop_length=hop_length,
-                                                    power=power,
-                                                    extra_features=extra_features)
-            if idx == 0:
-                dataset = numpy.zeros((vector_array.shape[0] * len(file_list), vector_array.shape[1]), float)
-            dataset[vector_array.shape[0] * idx: vector_array.shape[0] * (idx + 1), :] = vector_array
+        if extra_only:
+            dataset = list_to_vector_array_extra_only(file_list, msg, n_mels, frames, n_fft, hop_length, power)
+        else:
+            for idx in tqdm(range(len(file_list)), desc=msg):
+                vector_array = file_to_vector_array(file_list[idx],
+                                                        n_mels=n_mels,
+                                                        frames=frames,
+                                                        n_fft=n_fft,
+                                                        hop_length=hop_length,
+                                                        power=power,
+                                                        extra_features=extra_features)
+                if idx == 0:
+                    dataset = numpy.zeros((vector_array.shape[0] * len(file_list), vector_array.shape[1]), float)
+                dataset[vector_array.shape[0] * idx: vector_array.shape[0] * (idx + 1), :] = vector_array
 
-        print("Finished extracting features. Time taken: {}s".format(time.time() - time_start))
+            print("Finished extracting features. Time taken: {}s".format(time.time() - time_start))
 
         # Save pickle
         print("Saving pickle file of the data")

@@ -71,17 +71,22 @@ if __name__ == "__main__":
         print("============== DATASET_GENERATOR ==============")
         files = com.file_list_generator(target_dir)
         train_data = com.list_to_vector_array(files,
-                                          msg="generate train_dataset",
-                                          n_mels=param["feature"]["n_mels"],
-                                          frames=param["feature"]["frames"],
-                                          n_fft=param["feature"]["n_fft"],
-                                          hop_length=param["feature"]["hop_length"],
-                                          power=param["feature"]["power"],
-                                          extra_features=param["feature"]["extra"])
+                                              msg="generate train_dataset",
+                                              n_mels=param["feature"]["n_mels"],
+                                              frames=param["feature"]["frames"],
+                                              n_fft=param["feature"]["n_fft"],
+                                              hop_length=param["feature"]["hop_length"],
+                                              power=param["feature"]["power"],
+                                              extra_features=param["feature"]["extra"],
+                                              extra_only=param["feature"]["extra_only"])
+
+        #num_file = len(files)
+        #train_data = train_data.reshape(num_file, int(train_data.shape[0] / num_file), train_data.shape[1])
 
         # train model
         print("============== MODEL TRAINING ==============")
-        model = keras_model.get_model(train_data.shape[1])
+        #model = keras_model.get_model(train_data.shape[1])
+        model = keras_model.get_unet_model(train_data.shape[1])
 
         model.summary()
 
