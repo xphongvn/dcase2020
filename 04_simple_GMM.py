@@ -94,12 +94,11 @@ for idx, target_dir in enumerate(dirs):
                                             hop_length=param["feature"]["hop_length"],
                                             power=param["feature"]["power"],
                                             extra_features=param["feature"]["extra"],
-                                            extra_only=False)
+                                            extra_only=param["feature"]["extra"])
             prob = clf.score_samples(data)
             avg_prob = -np.mean(prob)
             y_pred[file_idx] = avg_prob
             anomaly_score_list.append([os.path.basename(file_path), y_pred[file_idx]])
-
 
         # save anomaly score
         com.save_csv(save_file_path=anomaly_score_csv, save_data=anomaly_score_list)
@@ -122,16 +121,28 @@ for idx, target_dir in enumerate(dirs):
         print("\n============ END OF TEST FOR A MACHINE ID ============")
 
 
-        # calculate averages for AUCs and pAUCs
-        averaged_performance = np.mean(np.array(performance, dtype=float), axis=0)
-        csv_lines.append(["Average"] + list(averaged_performance))
-        csv_lines.append([])
+    # calculate averages for AUCs and pAUCs
+    averaged_performance = np.mean(np.array(performance, dtype=float), axis=0)
+    csv_lines.append(["Average"] + list(averaged_performance))
+    csv_lines.append([])
 
-        # output results
-        result_path = "{result}/{file_name}_{id_str}".format(result=param["result_directory"],
-                                                file_name=param["result_file"], id_str=id_str)
-        com.logger.info("AUC and pAUC results -> {}".format(result_path))
-        com.save_csv(save_file_path=result_path, save_data=csv_lines)
-        #save model
-        with open(param["model_directory"] + "/GMM_extra_only_{}.model".format(id_str), 'wb') as fp:
-            pickle.dump(clf, fp, protocol=4)
+    # output results
+    result_path = "{result}/{file_name}_{id_str}".format(result=param["result_directory"],
+                                            file_name=param["result_file"], id_str=id_str)
+    com.logger.info("AUC and pAUC results -> {}".format(result_path))
+    com.save_csv(save_file_path=result_path, save_data=csv_lines)
+
+    anomaly_score_csv = "{result}/anomaly_score_{machine_type}.csv".format(result=param["result_directory"],
+                                                                           machine_type=machine_type)
+    com.save_csv(save_file_path=anomaly_score_csv, save_data=anomaly_score_list)
+    com.logger.info("anomaly score result ->  {}".format(anomaly_score_csv))
+
+    if param["feature"]["extra_only"]:
+        name = "extra_only"
+    elif param["feature"]["extra"]:
+        name = "logmel_extra"
+    else:
+        name = "logmel"
+    #save model
+    with open(param["model_directory"] + "/GMM_{}_{}.model".format(name,machine_type), 'wb') as fp:
+        pickle.dump(clf, fp, protocol=4)
