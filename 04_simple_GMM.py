@@ -7,6 +7,7 @@ import time
 from sklearn import mixture, metrics
 import random
 from tqdm import tqdm
+import pickle
 
 ########################################################################
 # Set seed
@@ -29,6 +30,13 @@ os.makedirs(param["model_directory_tf"], exist_ok=True)
 # load base_directory list
 dirs = com.select_dirs(param=param, mode=True)
 
+# initialize lines in csv for AUC and pAUC
+csv_lines = []
+
+# make output result directory
+os.makedirs(param["result_directory"], exist_ok=True)
+os.makedirs(param["model_directory"], exist_ok=True)
+
 # loop of the base directory
 for idx, target_dir in enumerate(dirs):
     print("\n===========================")
@@ -36,6 +44,8 @@ for idx, target_dir in enumerate(dirs):
 
     # set path
     machine_type = os.path.split(target_dir)[1]
+
+    # Check if model is exsiting
 
     # generate dataset
     print("============== DATASET_GENERATOR ==============")
@@ -47,14 +57,21 @@ for idx, target_dir in enumerate(dirs):
                                           n_fft=param["feature"]["n_fft"],
                                           hop_length=param["feature"]["hop_length"],
                                           power=param["feature"]["power"],
-                                          extra_features=param["feature"]["extra"])
+                                          extra_features=param["feature"]["extra"],
+                                          extra_only=param["feature"]["extra"])
 
     # fit a Gaussian Mixture Model with two components
-    clf = mixture.GaussianMixture(n_components=3, covariance_type='diag', tol=1e-6, max_iter=500, init_params='kmeans')
+    clf = mixture.GaussianMixture(n_components=10, covariance_type='full', tol=1e-6, max_iter=100,
+                                  init_params='kmeans', verbose=2)
     clf.fit(train_data)
     ##########################################################################################
     # Test time
     machine_id_list = com.get_machine_id_list_for_test(target_dir)
+
+    # results by type
+    csv_lines.append([machine_type])
+    csv_lines.append(["id", "AUC", "pAUC"])
+    performance = []
 
     for id_str in machine_id_list:
         # load test file
@@ -69,26 +86,52 @@ for idx, target_dir in enumerate(dirs):
 
         print("\n============== BEGIN TEST FOR A MACHINE ID ==============")
         y_pred = [0. for k in test_files]
-        for file_idx, file_path in tqdm(enumerate(test_files), total=len(test_files)):
-            try:
-                data = com.file_to_vector_array(file_path,
-                                                n_mels=param["feature"]["n_mels"],
-                                                frames=param["feature"]["frames"],
-                                                n_fft=param["feature"]["n_fft"],
-                                                hop_length=param["feature"]["hop_length"],
-                                                power=param["feature"]["power"],
-                                                extra_features=param["feature"]["extra"])
-                prob = clf.score_samples(data)
-                avg_prob = -np.mean(prob)
-                y_pred[file_idx] = avg_prob
-                anomaly_score_list.append([os.path.basename(file_path), y_pred[file_idx]])
+        for file_idx, file_path in enumerate(test_files):
+            data = com.file_to_vector_array(file_path,
+                                            n_mels=param["feature"]["n_mels"],
+                                            frames=param["feature"]["frames"],
+                                            n_fft=param["feature"]["n_fft"],
+                                            hop_length=param["feature"]["hop_length"],
+                                            power=param["feature"]["power"],
+                                            extra_features=param["feature"]["extra"],
+                                            extra_only=False)
+            prob = clf.score_samples(data)
+            avg_prob = -np.mean(prob)
+            y_pred[file_idx] = avg_prob
+            anomaly_score_list.append([os.path.basename(file_path), y_pred[file_idx]])
 
-            except IOError:
-                com.logger.error("file broken!!: {}".format(file_path))
 
+        # save anomaly score
+        com.save_csv(save_file_path=anomaly_score_csv, save_data=anomaly_score_list)
+        com.logger.info("anomaly score result ->  {}".format(anomaly_score_csv))
+
+
+        # append AUC and pAUC to lists
         # Calculate auc and p_auc
         auc = metrics.roc_auc_score(y_true, y_pred)
         p_auc = metrics.roc_auc_score(y_true, y_pred, max_fpr=param["max_fpr"])
 
         print("AUC : {}".format(auc))
         print("P_AUC : {}".format(p_auc))
+
+        csv_lines.append([id_str.split("_", 1)[1], auc, p_auc])
+        performance.append([auc, p_auc])
+        com.logger.info("AUC : {}".format(auc))
+        com.logger.info("pAUC : {}".format(p_auc))
+
+        print("\n============ END OF TEST FOR A MACHINE ID ============")
+
+
+        # calculate averages for AUCs and pAUCs
+        averaged_performance = np.mean(np.array(performance, dtype=float), axis=0)
+        csv_lines.append(["Average"] + list(averaged_performance))
+        csv_lines.append([])
+
+        # output results
+        result_path = "{result}/{file_name}_{id_str}".format(result=param["result_directory"],
+                                                file_name=param["result_file"], id_str=id_str)
+        com.logger.info("AUC and pAUC results -> {}".format(result_path))
+        com.save_csv(save_file_path=result_path, save_data=csv_lines)
+        #save model
+        with open(param["model_directory"] + "/GMM_extra_only_{}.model".format(id_str), 'wb') as fp:
+            pickle.dump(clf, fp, protocol=4)
