@@ -306,7 +306,7 @@ def list_to_vector_array(file_list,
     load = os.path.exists("./pickle_data/{}.pickle".format(file_name))
 
     if not load:
-        print("Does not find existing extracted pickle features. Extracting...")
+        print("Does not find existing extracted pickle features at {}.pickle. Extracting...".format(file_name))
         time_start = time.time()
         # iterate file_to_vector_array()
         if extra_only:
