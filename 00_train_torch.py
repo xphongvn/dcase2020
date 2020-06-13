@@ -83,12 +83,14 @@ if __name__ == "__main__":
         print("============== DATASET_GENERATOR ==============")
         files = com.file_list_generator(target_dir)
         train_data = com.list_to_vector_array(files,
-                                          msg="generate train_dataset",
-                                          n_mels=param["feature"]["n_mels"],
-                                          frames=param["feature"]["frames"],
-                                          n_fft=param["feature"]["n_fft"],
-                                          hop_length=param["feature"]["hop_length"],
-                                          power=param["feature"]["power"])
+                                              msg="generate train_dataset",
+                                              n_mels=param["feature"]["n_mels"],
+                                              frames=param["feature"]["frames"],
+                                              n_fft=param["feature"]["n_fft"],
+                                              hop_length=param["feature"]["hop_length"],
+                                              power=param["feature"]["power"],
+                                              extra_features=param['feature']['extra'],
+                                              extra_only=param["feature"]["extra_only"])
 
         # train model
         print("============== MODEL TRAINING ==============")

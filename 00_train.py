@@ -85,8 +85,7 @@ if __name__ == "__main__":
 
         # train model
         print("============== MODEL TRAINING ==============")
-        #model = keras_model.get_model(train_data.shape[1])
-        model = keras_model.get_unet_model(train_data.shape[1])
+        model = keras_model.get_model(train_data.shape[1])
 
         model.summary()
 

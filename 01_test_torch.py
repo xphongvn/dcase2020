@@ -76,7 +76,8 @@ if __name__ == "__main__":
                                         n_fft=param["feature"]["n_fft"],
                                         hop_length=param["feature"]["hop_length"],
                                         power=param["feature"]["power"],
-                                        extra_features=param["feature"]["extra"])
+                                        extra_features=param["feature"]["extra"],
+                                        extra_only=param["feature"]["extra_only"])
 
         input_dim = data.shape[1]
         print("Loading model file: {}".format(model_file))
@@ -112,7 +113,8 @@ if __name__ == "__main__":
                                                     n_fft=param["feature"]["n_fft"],
                                                     hop_length=param["feature"]["hop_length"],
                                                     power=param["feature"]["power"],
-                                                    extra_features=param["feature"]["extra"])
+                                                    extra_features=param["feature"]["extra"],
+                                                    extra_only=param["feature"]["extra_only"])
 
                     feed_data = torch.as_tensor(data, device=device, dtype=torch.float32)
                     with torch.no_grad():
