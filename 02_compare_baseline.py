@@ -1,14 +1,18 @@
 import pandas as pd
+import matplotlib.pylab as plt
 
-#baseline_file = "./result_tf/result_tf.csv"
-baseline_file = "./result_torch1/result_torch.csv"
-check_file = "./result_torch3/result_torch.csv"
+baseline_file = "./result/result_tf/result_tf.csv"
+#check_file = "./result/result_tf_unet/result_tf_unet.csv"
+#check_file = "./result/GMM_extra_only/result_tf.csv"
+#check_file = "./result/result_tf_with_extra/result_tf.csv"
+check_file = "./result/result_tf_extra_only/result.csv"
+#check_file = "./result/result_torch/result_torch.csv"
 
 def read_file(file_name):
     all_df = {}
     all_average = {}
     with open(file_name) as f:
-        for i in range(5):
+        for i in range(6):
             name = f.readline().strip()
             column_name_string = f.readline()
             column_names = column_name_string.strip().split(",")
@@ -56,3 +60,16 @@ baseline_dfs, baseline_avgs = read_file(baseline_file)
 check_dfs, check_avgs = read_file(check_file)
 
 compare_average(baseline_avgs, check_avgs)
+
+baseline_auc = [item["average_auc"] for item in baseline_avgs.values()]
+check_auc = [item["average_auc"] for item in check_avgs.values()]
+label = [item for item in baseline_avgs.keys()]
+df = {}
+for i, value in enumerate(label):
+    df[value] = [baseline_auc[i], check_auc[i]]
+
+df = pd.DataFrame(df, index=["baseline","our_model"])
+#%%
+
+df.T.plot.bar()
+plt.show()
