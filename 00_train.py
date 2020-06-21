@@ -10,6 +10,7 @@
 ########################################################################
 import os
 import sys
+import numpy as np
 ########################################################################
 
 
@@ -21,6 +22,7 @@ import common as com
 import keras_model
 import ipdb
 from visualizer import visualizer
+from keras.callbacks import EarlyStopping
 
 ########################################################################
 
@@ -49,7 +51,7 @@ if __name__ == "__main__":
     visualizer = visualizer()
 
     # load base_directory list
-    dirs = com.select_dirs(param=param, mode=mode)
+    dirs, add_dirs = com.select_dirs(param=param, mode=mode)
 
     # loop of the base directory
     for idx, target_dir in enumerate(dirs):
@@ -80,6 +82,22 @@ if __name__ == "__main__":
                                               extra_features=param["feature"]["extra"],
                                               extra_only=param["feature"]["extra_only"])
 
+        if param["add_data"]:
+            add_files = com.file_list_generator(add_dirs[idx])
+            add_data = com.list_to_vector_array(add_files,
+                                                msg="generate train_dataset",
+                                                n_mels=param["feature"]["n_mels"],
+                                                frames=param["feature"]["frames"],
+                                                n_fft=param["feature"]["n_fft"],
+                                                hop_length=param["feature"]["hop_length"],
+                                                power=param["feature"]["power"],
+                                                extra_features=param["feature"]["extra"],
+                                                extra_only=param["feature"]["extra_only"])
+            print("Dimension train data: {}".format(train_data.shape))
+            print("Dimension additional data: {}".format(add_data.shape))
+            train_data = np.vstack((train_data,add_data))
+            del add_data
+
         #num_file = len(files)
         #train_data = train_data.reshape(num_file, int(train_data.shape[0] / num_file), train_data.shape[1])
 
@@ -91,6 +109,8 @@ if __name__ == "__main__":
 
         model.compile(**param["fit"]["compile"])
 
+        es = EarlyStopping(monitor='val_loss', mode='min', verbose=1, patience=3)
+
         # Behavior of keras: Split training and validation with the defined percentage, and then shuffle
         # the training; validation is not shuffled
         # https://keras.io/getting-started/faq/#how-is-the-validation-split-computed
@@ -100,7 +120,8 @@ if __name__ == "__main__":
                             batch_size=param["fit"]["batch_size"],
                             shuffle=param["fit"]["shuffle"],
                             validation_split=param["fit"]["validation_split"],
-                            verbose=param["fit"]["verbose"])
+                            verbose=param["fit"]["verbose"],
+                            callbacks=[es])
 
         visualizer.loss_plot(history.history["loss"], history.history["val_loss"])
         visualizer.save_figure(history_img)

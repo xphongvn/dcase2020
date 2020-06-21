@@ -96,13 +96,12 @@ if __name__ == "__main__":
                                              extra_features=param["feature"]["extra"],
                                              extra_only=param["feature"]["extra_only"])
 
-        test_data = torch.as_tensor(test_data, device=device, dtype=torch.float32)
-
         num_files = len(test_files)
         num_features = test_data.shape[1]
         # Number of rows for each data file
         num_rows = int(len(test_data) / num_files)
         test_data = test_data.reshape(num_files, num_rows, num_features)
+        test_data = torch.as_tensor(test_data, device=device, dtype=torch.float32)
 
         # setup anomaly score file path
         anomaly_score_csv = "{result}/anomaly_score_{machine_type}_{id_str}.csv".format(

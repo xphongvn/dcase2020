@@ -265,11 +265,15 @@ def select_dirs(param, mode):
         logger.info("load_directory <- development")
         dir_path = os.path.abspath("{base}/*".format(base=param["dev_directory"]))
         dirs = sorted(glob.glob(dir_path))
+        logger.info("load_directory <- additional")
+        add_dir_path = os.path.abspath("{base}/*".format(base=param["add_directory"]))
+        add_dirs = sorted(glob.glob(add_dir_path))
+        return dirs, add_dirs
     else:
         logger.info("load_directory <- evaluation")
         dir_path = os.path.abspath("{base}/*".format(base=param["eval_directory"]))
         dirs = sorted(glob.glob(dir_path))
-    return dirs
+        return dirs, dirs
 
 ########################################################################
 
@@ -303,6 +307,8 @@ def list_to_vector_array(file_list,
     else:
         file_name = hash(str(str(file_list) + str(extra_features)) + str(power) + str(hop_length) +
                          str(n_fft) + str(frames) + str(n_mels))
+    print("Extra Features: {}".format(str(extra_features)))
+    print("Extra ONLY: {}".format(str(extra_only)))
     load = os.path.exists("./pickle_data/{}.pickle".format(file_name))
 
     if not load:

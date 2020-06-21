@@ -1,5 +1,6 @@
 #Mila Cluster
 dev_directory : /network/tmp1/nguyenph/dcase2020/dev
+add_directory : /network/tmp1/nguyenph/dcase2020/add
 eval_directory : /network/tmp1/nguyenph/dcase2020/eval
 
 #Beluga
@@ -28,6 +29,7 @@ result_file_SVDD: result_SVDD.csv
 model_directory: ./model/GMM
 result_directory: ./result/GMM
 result_file: result_GMM.csv
+add_data: True
 
 max_fpr : 0.1
 
@@ -45,7 +47,7 @@ fit:
   compile:
     optimizer : adam
     loss : mean_squared_error
-  epochs : 20
+  epochs : 100
   batch_size : 512
   shuffle : True
   validation_split : 0.1

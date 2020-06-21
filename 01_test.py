@@ -43,7 +43,7 @@ if __name__ == "__main__":
     os.makedirs(param["result_directory_tf"], exist_ok=True)
 
     # load base directory
-    dirs = com.select_dirs(param=param, mode=mode)
+    dirs, add_dirs = com.select_dirs(param=param, mode=mode)
 
     # initialize lines in csv for AUC and pAUC
     csv_lines = []
